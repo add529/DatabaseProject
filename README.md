@@ -1,8 +1,12 @@
 # **DATABASE PROJECT**
 
 ## Tasks
-- Connect one of our databases to this codebase.
-- Develop a GUI that handles all necessary database operations (Create, Read, Update, Delete).
+- Write manual
+- Write tutorial
+- Make Flyer
+- Make Presentation
+- Develop GUI more
+- Add data to tables
 
 ---
 
