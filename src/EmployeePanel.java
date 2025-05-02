@@ -148,9 +148,8 @@ public class EmployeePanel extends JPanel {
 
     private void toggleEditMode() {
         isEditable = !isEditable; // Toggle between edit and view mode
-
-        for (int i = 0; i < fields.length; i++) {
-            fields[i].setEditable(isEditable);
+        for (JTextField field : fields) {
+            field.setEditable(isEditable);
         }
 
         if (isEditable) {
@@ -229,23 +228,6 @@ public class EmployeePanel extends JPanel {
         };
         tableModel.setRowCount(0); // Clear table before loading
         worker.execute();
-    }
-
-    private void loadEmployeeDetails(String empNo) {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "SELECT * FROM EMPLOYEE WHERE Employee_No = ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, empNo);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                for (int i = 0; i < fieldNames.length; i++) {
-                    fields[i].setText(rs.getString(fieldNames[i]));
-                    fields[i].setEditable(false);
-                }
-            }
-        } catch (Exception ex) {
-            showError("Error loading details: " + ex.getMessage());
-        }
     }
 
     private void searchEmployee(String attr, String value) {
