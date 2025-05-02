@@ -8,54 +8,93 @@ public class EmployeePanel extends JPanel {
     private JTable employeeTable;
     private DefaultTableModel tableModel;
 
-    private JTextField empNoField, nameField, addressField, jobDescField;
+    private JTextField[] fields;
+    private String[] fieldNames = {
+        "Employee_No", "SSN", "FName", "MName", "LName", "DOB", "Address", "Sex",
+        "Nationality", "Ethnic_ID", "Marital_Status", "Disability_Status", "Location",
+        "Status", "Cost_Center", "Seniority", "Job_Code", "Job_Desc", "Last_Hired",
+        "SuperSSN", "Product_ID", "Department_ID", "Employee_Type", "Pay_Group", "Office_ID"
+    };
+
     private JButton editButton, updateButton;
-    private boolean isEditMode = false;
+    private JTextField searchField;
+    private JComboBox<String> searchAttributeBox;
 
     public EmployeePanel() {
         setLayout(new BorderLayout(10, 10));
 
         // ===== LEFT CONTROL PANEL =====
         JPanel controlPanel = new JPanel();
-        controlPanel.setLayout(new GridLayout(3, 1, 5, 5));
-        controlPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        controlPanel.setBackground(new Color(240, 240, 240));
+        controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
+        controlPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Add padding to all sides
 
+        // Add "Search by:" label
+        JLabel searchByLabel = new JLabel("Search by:");
+        searchByLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        searchByLabel.setFont(new Font("Tahoma", Font.BOLD, 12));
+        controlPanel.add(searchByLabel);
+
+        // Add the JComboBox for search attributes
+        searchAttributeBox = new JComboBox<>(new String[] {
+            "Employee_No", "First_Name", "Last_Name", "Job_Title", "Department_ID"
+        });
+        searchAttributeBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        searchAttributeBox.setFont(new Font("Tahoma", Font.PLAIN, 12));
+        searchAttributeBox.setMaximumSize(new Dimension(200, 25)); // Set consistent width
+        controlPanel.add(searchAttributeBox);
+
+        // Add spacing between components
+        controlPanel.add(Box.createVerticalStrut(10));
+
+        // Add the search text field
+        JLabel searchFieldLabel = new JLabel("Search value:");
+        searchFieldLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        searchFieldLabel.setFont(new Font("Tahoma", Font.BOLD, 12));
+        controlPanel.add(searchFieldLabel);
+
+        searchField = new JTextField();
+        searchField.setMaximumSize(new Dimension(200, 25)); // Set consistent width
+        controlPanel.add(searchField);
+
+        // Add spacing between components
+        controlPanel.add(Box.createVerticalStrut(10));
+
+        // Add buttons with spacing
         JButton searchBtn = new JButton("Search");
         JButton showAllBtn = new JButton("Show All");
         JButton deleteBtn = new JButton("Delete");
 
+        searchBtn.setMaximumSize(new Dimension(200, 30)); // Set consistent width
+        showAllBtn.setMaximumSize(new Dimension(200, 30)); // Set consistent width
+        deleteBtn.setMaximumSize(new Dimension(200, 30)); // Set consistent width
+
         controlPanel.add(searchBtn);
+        controlPanel.add(Box.createVerticalStrut(10)); // Add spacing between buttons
         controlPanel.add(showAllBtn);
+        controlPanel.add(Box.createVerticalStrut(10)); // Add spacing between buttons
         controlPanel.add(deleteBtn);
 
         add(controlPanel, BorderLayout.WEST);
 
         // ===== CENTER TABLE PANEL =====
-        tableModel = new DefaultTableModel(new String[]{"Employee No", "Name", "Address", "Job Desc"}, 0);
+        tableModel = new DefaultTableModel(new String[]{"Employee_No", "FName", "LName", "Job_Desc"}, 0);
         employeeTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(employeeTable);
         add(scrollPane, BorderLayout.CENTER);
 
-        // ===== BOTTOM INFO + BUTTONS =====
+        // ===== BOTTOM FORM AND BUTTONS =====
         JPanel bottomPanel = new JPanel(new BorderLayout());
-
-        JPanel fieldsPanel = new JPanel(new GridLayout(2, 4, 5, 5));
+        JPanel fieldsPanel = new JPanel(new GridLayout(fieldNames.length / 2 + fieldNames.length % 2, 4, 5, 5));
         fieldsPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        empNoField = new JTextField();
-        empNoField.setEditable(false);
-        nameField = new JTextField();
-        addressField = new JTextField();
-        jobDescField = new JTextField();
-
-        nameField.setEditable(false);
-        addressField.setEditable(false);
-        jobDescField.setEditable(false);
-
-        fieldsPanel.add(new JLabel("Employee No:")); fieldsPanel.add(empNoField);
-        fieldsPanel.add(new JLabel("Name:")); fieldsPanel.add(nameField);
-        fieldsPanel.add(new JLabel("Address:")); fieldsPanel.add(addressField);
-        fieldsPanel.add(new JLabel("Job Desc:")); fieldsPanel.add(jobDescField);
+        fields = new JTextField[fieldNames.length];
+        for (int i = 0; i < fieldNames.length; i++) {
+            fields[i] = new JTextField();
+            fields[i].setEditable(false);
+            fieldsPanel.add(new JLabel(fieldNames[i] + ":"));
+            fieldsPanel.add(fields[i]);
+        }
 
         bottomPanel.add(fieldsPanel, BorderLayout.CENTER);
 
@@ -66,42 +105,47 @@ public class EmployeePanel extends JPanel {
 
         buttonPanel.add(editButton);
         buttonPanel.add(updateButton);
-
         bottomPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         add(bottomPanel, BorderLayout.SOUTH);
 
         // ===== Event Listeners =====
+        searchBtn.addActionListener(e -> {
+            String attr = (String) searchAttributeBox.getSelectedItem();
+            String value = searchField.getText().trim();
+            if (value.isEmpty()) {
+                showError("Please enter a value to search.");
+                return;
+            }
+            searchEmployee(attr, value);
+        });
+
         showAllBtn.addActionListener(e -> loadAllEmployees());
+        deleteBtn.addActionListener(e -> deleteSelectedEmployee());
+
         employeeTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && employeeTable.getSelectedRow() != -1) {
-                int row = employeeTable.getSelectedRow();
-                empNoField.setText(tableModel.getValueAt(row, 0).toString());
-                nameField.setText(tableModel.getValueAt(row, 1).toString());
-                addressField.setText(tableModel.getValueAt(row, 2).toString());
-                jobDescField.setText(tableModel.getValueAt(row, 3).toString());
+                loadEmployeeDetails(employeeTable.getValueAt(employeeTable.getSelectedRow(), 0).toString());
                 disableEditing();
             }
         });
 
         editButton.addActionListener(e -> enableEditing());
         updateButton.addActionListener(e -> updateEmployee());
-        deleteBtn.addActionListener(e -> deleteSelectedEmployee());
 
-        // Initial load
         loadAllEmployees();
     }
 
     private void loadAllEmployees() {
         tableModel.setRowCount(0);
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "SELECT Employee_No, CONCAT(FName, ' ', MName, ' ', LName) AS FullName, Address, Job_Desc FROM EMPLOYEE ORDER BY Employee_No DESC";
+            String sql = "SELECT Employee_No, FName, LName, Job_Desc FROM EMPLOYEE ORDER BY Employee_No DESC";
             ResultSet rs = conn.createStatement().executeQuery(sql);
             while (rs.next()) {
                 tableModel.addRow(new Object[]{
                     rs.getString("Employee_No"),
-                    rs.getString("FullName"),
-                    rs.getString("Address"),
+                    rs.getString("FName"),
+                    rs.getString("LName"),
                     rs.getString("Job_Desc")
                 });
             }
@@ -110,38 +154,77 @@ public class EmployeePanel extends JPanel {
         }
     }
 
+    private void searchEmployee(String attr, String value) {
+        tableModel.setRowCount(0);
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "SELECT Employee_No, FName, LName, Job_Desc FROM EMPLOYEE WHERE " + attr + " = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, value);
+            ResultSet rs = ps.executeQuery();
+            boolean found = false;
+            while (rs.next()) {
+                tableModel.addRow(new Object[]{
+                    rs.getString("Employee_No"),
+                    rs.getString("FName"),
+                    rs.getString("LName"),
+                    rs.getString("Job_Desc")
+                });
+                found = true;
+            }
+            if (!found) {
+                showError("No employee found with " + attr + " = " + value);
+            }
+        } catch (Exception ex) {
+            showError("Search error: " + ex.getMessage());
+        }
+    }
+
+    private void loadEmployeeDetails(String empNo) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "SELECT * FROM EMPLOYEE WHERE Employee_No = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, empNo);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                for (int i = 0; i < fieldNames.length; i++) {
+                    fields[i].setText(rs.getString(fieldNames[i]));
+                }
+            }
+        } catch (Exception ex) {
+            showError("Error loading employee details: " + ex.getMessage());
+        }
+    }
+
     private void enableEditing() {
-        nameField.setEditable(true);
-        addressField.setEditable(true);
-        jobDescField.setEditable(true);
+        for (JTextField field : fields) {
+            field.setEditable(true);
+        }
         updateButton.setEnabled(true);
     }
 
     private void disableEditing() {
-        nameField.setEditable(false);
-        addressField.setEditable(false);
-        jobDescField.setEditable(false);
+        for (JTextField field : fields) {
+            field.setEditable(false);
+        }
         updateButton.setEnabled(false);
     }
 
     private void updateEmployee() {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String[] nameParts = nameField.getText().split(" ", 3);
-            String fName = nameParts.length > 0 ? nameParts[0] : "";
-            String mName = nameParts.length > 1 ? nameParts[1] : "";
-            String lName = nameParts.length > 2 ? nameParts[2] : "";
+            StringBuilder sql = new StringBuilder("UPDATE EMPLOYEE SET ");
+            for (int i = 1; i < fieldNames.length; i++) {
+                sql.append(fieldNames[i]).append(" = ?");
+                if (i < fieldNames.length - 1) sql.append(", ");
+            }
+            sql.append(" WHERE Employee_No = ?");
 
-            String sql = "UPDATE EMPLOYEE SET FName = ?, MName = ?, LName = ?, Address = ?, Job_Desc = ? WHERE Employee_No = ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, fName);
-            ps.setString(2, mName);
-            ps.setString(3, lName);
-            ps.setString(4, addressField.getText());
-            ps.setString(5, jobDescField.getText());
-            ps.setString(6, empNoField.getText());
+            PreparedStatement ps = conn.prepareStatement(sql.toString());
+            for (int i = 1; i < fieldNames.length; i++) {
+                ps.setString(i, fields[i].getText());
+            }
+            ps.setString(fieldNames.length, fields[0].getText());
 
             int rows = ps.executeUpdate();
-
             if (rows > 0) {
                 JOptionPane.showMessageDialog(this, "Update successful.");
                 loadAllEmployees();
@@ -158,11 +241,12 @@ public class EmployeePanel extends JPanel {
             showError("Select an employee to delete.");
             return;
         }
+
         int confirm = JOptionPane.showConfirmDialog(this, "Delete this employee?", "Confirm", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
 
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String empNo = empNoField.getText();
+            String empNo = fields[0].getText();
             String sql = "DELETE FROM EMPLOYEE WHERE Employee_No = ?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, empNo);
@@ -178,10 +262,9 @@ public class EmployeePanel extends JPanel {
     }
 
     private void clearFields() {
-        empNoField.setText("");
-        nameField.setText("");
-        addressField.setText("");
-        jobDescField.setText("");
+        for (JTextField field : fields) {
+            field.setText("");
+        }
         disableEditing();
     }
 
