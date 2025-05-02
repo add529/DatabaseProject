@@ -4,10 +4,11 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
 public class OfficePanel extends JPanel {
-    private JTable table;
-    private DefaultTableModel tableModel;
-    private JTextField searchField;
-    private JButton searchBtn, showAllBtn;
+    private final JTable table;
+    private final DefaultTableModel tableModel;
+    private final JTextField searchField;
+    private final JButton searchBtn;
+    private final JButton showAllBtn;
 
     public OfficePanel() {
         setLayout(new BorderLayout());

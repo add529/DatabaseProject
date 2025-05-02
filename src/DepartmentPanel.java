@@ -145,15 +145,9 @@ public class DepartmentPanel extends JPanel {
 
             // Convert value type based on column
             switch (attribute) {
-                case "Budget":
-                case "Dep_Head_Bonus":
-                    ps.setFloat(1, Float.parseFloat(value));
-                    break;
-                case "Employee_Count":
-                    ps.setInt(1, Integer.parseInt(value));
-                    break;
-                default:
-                    ps.setString(1, value);
+                case "Budget", "Dep_Head_Bonus" -> ps.setFloat(1, Float.parseFloat(value));
+                case "Employee_Count" -> ps.setInt(1, Integer.parseInt(value));
+                default -> ps.setString(1, value);
             }
 
             ResultSet rs = ps.executeQuery();
