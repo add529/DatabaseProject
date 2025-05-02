@@ -32,9 +32,9 @@ For this project to run as intended, your computer must be connected to the Tows
 
 Instructions to connect can be found at this link. You will need your Towson University credentials to download and login.
 
-[text](https://techhelp.towson.edu/TDClient/1879/Portal/KB/ArticleDet?ID=140698)
+[Towson Tech Help](https://techhelp.towson.edu/TDClient/1879/Portal/KB/ArticleDet?ID=140698)
 
-[text](https://vpnc.towson.edu)
+[https://vpnc.towson.edu](https://vpnc.towson.edu)
 
 Once connected, the project connection to the MySQL database will authenticate properly.
 
@@ -58,8 +58,8 @@ There are two methods to run the project. It is our recommendation that this pro
 
     You can use these links to install the correct version of Java needed to run.
 
-    [text](https://adoptium.net/)
-    [text](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html)
+    [Adoptium](https://adoptium.net/)
+    [Oracle](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html)
 
     Once the correct version of Java is installed, run the project from a command prompt/ or powershell.
 
@@ -77,4 +77,4 @@ There are two methods to run the project. It is our recommendation that this pro
 
 This project can also be found on GitHub at:
 
-    [text](https://github.com/add529/DatabaseProject)
+    [Github](https://github.com/add529/DatabaseProject)
