@@ -59,6 +59,7 @@ There are two methods to run the project. It is our recommendation that this pro
     You can use these links to install the correct version of Java needed to run.
 
     [Adoptium](https://adoptium.net/)
+
     [Oracle](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html)
 
     Once the correct version of Java is installed, run the project from a command prompt/ or powershell.
@@ -77,4 +78,4 @@ There are two methods to run the project. It is our recommendation that this pro
 
 This project can also be found on GitHub at:
 
-    [Github](https://github.com/add529/DatabaseProject)
+    (https://github.com/add529/DatabaseProject)
