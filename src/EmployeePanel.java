@@ -37,7 +37,7 @@ public class EmployeePanel extends JPanel {
 
         // Add the JComboBox for search attributes
         searchAttributeBox = new JComboBox<>(new String[] {
-            "Employee_No", "First_Name", "Last_Name", "Job_Title", "Department_ID"
+            "Employee_No", "SSN", "Department_ID", "Office_ID", "SuperSSN", "FName", "LName", "Address", "Nationality", "Job_Desc", "Location", "Employee_Type", "Pay_Group", "Status", "Cost_Center", "Seniority", "Job_Code", "Last_Hired", "Product_ID"
         });
         searchAttributeBox.setAlignmentX(Component.LEFT_ALIGNMENT);
         searchAttributeBox.setFont(new Font("Tahoma", Font.PLAIN, 12));
@@ -78,9 +78,17 @@ public class EmployeePanel extends JPanel {
         add(controlPanel, BorderLayout.WEST);
 
         // ===== CENTER TABLE PANEL =====
-        tableModel = new DefaultTableModel(new String[]{"Employee_No", "FName", "LName", "Job_Desc"}, 0);
+        tableModel = new DefaultTableModel(new String[]{
+            "Employee_No", "SSN", "Department_ID", "Office_ID", "SuperSSN", "FName", "LName",
+            "Address", "Nationality", "Job_Desc", "Location", "Employee_Type", "Pay_Group",
+            "Status", "Cost_Center", "Seniority", "Job_Code", "Last_Hired", "Product_ID"
+        }, 0);
+
         employeeTable = new JTable(tableModel);
+        employeeTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF); // Disable auto-resizing to allow horizontal scrolling
+
         JScrollPane scrollPane = new JScrollPane(employeeTable);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED); // Enable horizontal scrolling
         add(scrollPane, BorderLayout.CENTER);
 
         // ===== BOTTOM FORM AND BUTTONS =====
@@ -139,14 +147,36 @@ public class EmployeePanel extends JPanel {
     private void loadAllEmployees() {
         tableModel.setRowCount(0);
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "SELECT Employee_No, FName, LName, Job_Desc FROM EMPLOYEE ORDER BY Employee_No DESC";
+            String sql = "SELECT Employee_No, SSN, Department_ID, Office_ID, SuperSSN, FName, LName, Address, Nationality, Job_Desc, Location, Employee_Type, Pay_Group, Status, Cost_Center, Seniority, Job_Code, Last_Hired, Product_ID FROM EMPLOYEE ORDER BY Employee_No DESC";
             ResultSet rs = conn.createStatement().executeQuery(sql);
             while (rs.next()) {
                 tableModel.addRow(new Object[]{
+
+                    // Identification
                     rs.getString("Employee_No"),
+                    rs.getString("SSN"),
+                    rs.getString("Department_ID"),
+                    rs.getString("Office_ID"),
+                    rs.getString("SuperSSN"),
+
+                    // General Information
                     rs.getString("FName"),
                     rs.getString("LName"),
-                    rs.getString("Job_Desc")
+                    rs.getString("Address"),
+                    rs.getString("Nationality"),
+                    rs.getString("Job_Desc"),
+                    rs.getString("Location"),
+
+                    // Employee Information
+                    rs.getString("Employee_Type"),
+                    rs.getString("Pay_Group"),
+                    rs.getString("Status"),
+                    rs.getString("Cost_Center"),
+                    rs.getString("Seniority"),
+                    rs.getString("Job_Code"),
+                    rs.getString("Last_Hired"),
+                    rs.getString("Product_ID"),
+
                 });
             }
         } catch (Exception ex) {
@@ -157,17 +187,37 @@ public class EmployeePanel extends JPanel {
     private void searchEmployee(String attr, String value) {
         tableModel.setRowCount(0);
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "SELECT Employee_No, FName, LName, Job_Desc FROM EMPLOYEE WHERE " + attr + " = ?";
+            String sql = "SELECT Employee_No, SSN, Department_ID, Office_ID, SuperSSN, FName, LName, Address, Nationality, Job_Desc, Location, Employee_Type, Pay_Group, Status, Cost_Center, Seniority, Job_Code, Last_Hired, Product_ID  FROM EMPLOYEE WHERE " + attr + " = ?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, value);
             ResultSet rs = ps.executeQuery();
             boolean found = false;
             while (rs.next()) {
                 tableModel.addRow(new Object[]{
+                    // Identification
                     rs.getString("Employee_No"),
+                    rs.getString("SSN"),
+                    rs.getString("Department_ID"),
+                    rs.getString("Office_ID"),
+                    rs.getString("SuperSSN"),
+
+                    // General Information
                     rs.getString("FName"),
                     rs.getString("LName"),
-                    rs.getString("Job_Desc")
+                    rs.getString("Address"),
+                    rs.getString("Nationality"),
+                    rs.getString("Job_Desc"),
+                    rs.getString("Location"),
+
+                    // Employee Information
+                    rs.getString("Employee_Type"),
+                    rs.getString("Pay_Group"),
+                    rs.getString("Status"),
+                    rs.getString("Cost_Center"),
+                    rs.getString("Seniority"),
+                    rs.getString("Job_Code"),
+                    rs.getString("Last_Hired"),
+                    rs.getString("Product_ID")
                 });
                 found = true;
             }
