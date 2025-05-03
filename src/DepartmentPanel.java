@@ -14,6 +14,9 @@ public class DepartmentPanel extends JPanel {
     private final Color TOP_GRADIENT = new Color (0x9ed7cf);
     private final Color BOT_GRADIENT = new Color (0xd0e8bd);
 
+    private JTextField namField, budgetField, empCountField, deptHeadSSNField, bonusField;
+    private JButton editBtn, saveBtn;
+
     private String[] fieldNames = {
         "Department_ID", "Name", "Budget", "Employee_Count", "Dep_Head_SSN", "Dep_Head_Bonus"
     };
@@ -36,14 +39,12 @@ public class DepartmentPanel extends JPanel {
         //Navigation Bar Button Creation
         selectBtn = new JButton("Select"); //Instantiate Select Button
         JButton showAllBtn = new JButton("Show All"); //Instantiate Show All Button
-        JButton showPII = new JButton("PII"); //Instantiate PII Button
-        JButton showEmpAssets = new JButton("Assets"); //Instantiate Assets Button
-        JButton showEmpSuper = new JButton("Supervisors"); //Instantiate Supervisors Button
-        JButton showEmpPay = new JButton("Type and Pay"); //Instantiate Type and Pay Button
+        JButton showEmp = new JButton("Show Employees"); //Instantiate Show Employee Button
+
 
 
         //Navigation Bar Button Formatting
-        for (JButton btn : new JButton[]{showEmpSuper, showEmpPay, showPII, showEmpAssets, selectBtn, showAllBtn}) {
+        for (JButton btn : new JButton[]{showEmp, selectBtn, showAllBtn}) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
             btn.setMaximumSize(new Dimension(120, 40));
             btn.setBackground(DARK_BG);
@@ -56,13 +57,9 @@ public class DepartmentPanel extends JPanel {
         navBar.add(Box.createVerticalStrut(10)); //Spacing
         navBar.add(showAllBtn);
         navBar.add(Box.createVerticalStrut(10));
-        navBar.add(showPII);
+        navBar.add(showEmp);
         navBar.add(Box.createVerticalStrut(10));
-        navBar.add(showEmpSuper);
-        navBar.add(Box.createVerticalStrut(10));
-        navBar.add(showEmpPay);
-        navBar.add(Box.createVerticalStrut(10));
-        navBar.add(showEmpAssets);
+
 
         //Add Navigation Bar to Panel
         add(navBar, BorderLayout.WEST);
@@ -119,19 +116,170 @@ public class DepartmentPanel extends JPanel {
 
         // === BOTTOM PANEL AND INPUTS ===
 
-        JPanel inputPanel = new JPanel(); //Instantiate new panel
-
+        JPanel inputPanel = new JPanel(); // Instantiate new panel
         inputPanel.setBackground(BOT_GRADIENT);
-        inputPanel.setPreferredSize(new Dimension(0, 80));
-        inputPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        inputPanel.setPreferredSize(new Dimension(0, 200)); // Increased height for space
+        inputPanel.setLayout(new BorderLayout(10, 10)); // Use BorderLayout for better positioning
 
-        JButton addBtn = new JButton("Add Department");
+        // Create a panel for buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        buttonPanel.setOpaque(false);
 
-        addBtn.setBackground(DARK_BG);
-        addBtn.setForeground(Color.WHITE);
+        // Create buttons
+        JButton addBtn = new JButton("Add"); // Instantiate Add Button
+        editBtn = new JButton("Edit");
+        saveBtn = new JButton("Update");
+        saveBtn.setVisible(false); // Initially hide the Update button
 
-        inputPanel.add(addBtn);
+        // Style buttons to match Add Button
+        for (JButton btn : new JButton[]{addBtn, editBtn, saveBtn}) {
+            btn.setBackground(DARK_BG);
+            btn.setForeground(Color.WHITE);
+            btn.setFocusPainted(false);
+            btn.setPreferredSize(new Dimension(100, 30)); // Set uniform size
+        }
 
+        // Add buttons to the button panel
+        buttonPanel.add(addBtn);
+        buttonPanel.add(editBtn);
+        buttonPanel.add(saveBtn);
+
+        // Initialize the text fields
+        namField = new JTextField(15);
+        budgetField = new JTextField(15);
+        empCountField = new JTextField(15);
+        deptHeadSSNField = new JTextField(15);
+        bonusField = new JTextField(15);
+
+        // Create a panel for input fields and labels
+        JPanel fieldsPanel = new JPanel(new GridLayout(0, 2, 10, 10)); // Grid layout for labels and fields
+        fieldsPanel.setOpaque(false); // Make it transparent
+        fieldsPanel.setVisible(false); // Initially hidden
+
+        // Add fields and labels to the fields panel
+        fieldsPanel.add(new JLabel("Name:"));
+        fieldsPanel.add(namField);
+        fieldsPanel.add(new JLabel("Budget:"));
+        fieldsPanel.add(budgetField);
+        fieldsPanel.add(new JLabel("Employee Count:"));
+        fieldsPanel.add(empCountField);
+        fieldsPanel.add(new JLabel("Department Head SSN:"));
+        fieldsPanel.add(deptHeadSSNField);
+        fieldsPanel.add(new JLabel("Department Head Bonus:"));
+        fieldsPanel.add(bonusField);
+
+        // Add panels to the input panel
+        inputPanel.add(buttonPanel, BorderLayout.NORTH); // Buttons at the top
+        inputPanel.add(fieldsPanel, BorderLayout.CENTER); // Fields below the buttons
+
+        // Add action listeners
+        selectBtn.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow == -1) {
+                showError("Please select a row in the table first.");
+                return;
+            }
+
+            // Populate the input fields with the selected row's data
+            namField.setText((String) tableModel.getValueAt(selectedRow, 1));
+            budgetField.setText((String) tableModel.getValueAt(selectedRow, 2));
+            empCountField.setText((String) tableModel.getValueAt(selectedRow, 3));
+            deptHeadSSNField.setText((String) tableModel.getValueAt(selectedRow, 4));
+            bonusField.setText((String) tableModel.getValueAt(selectedRow, 5));
+
+            // Make the fields visible but not editable
+            fieldsPanel.setVisible(true);
+            namField.setEditable(false);
+            budgetField.setEditable(false);
+            empCountField.setEditable(false);
+            deptHeadSSNField.setEditable(false);
+            bonusField.setEditable(false);
+
+            saveBtn.setVisible(false); // Hide the Update button
+        });
+
+        editBtn.addActionListener(e -> {
+            // Make fields editable and show the Update button
+            fieldsPanel.setVisible(true);
+            namField.setEditable(true);
+            budgetField.setEditable(true);
+            empCountField.setEditable(true);
+            deptHeadSSNField.setEditable(true);
+            bonusField.setEditable(true);
+            saveBtn.setVisible(true); // Show the Update button
+        });
+
+        saveBtn.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow == -1) {
+                showError("Please select a row to update.");
+                return;
+            }
+
+            // Get the original values from the table
+            String originalName = (String) tableModel.getValueAt(selectedRow, 1);
+            String originalBudget = (String) tableModel.getValueAt(selectedRow, 2);
+            String originalEmpCount = (String) tableModel.getValueAt(selectedRow, 3);
+            String originalDeptHeadSSN = (String) tableModel.getValueAt(selectedRow, 4);
+            String originalBonus = (String) tableModel.getValueAt(selectedRow, 5);
+
+            // Get the updated values from the input fields
+            String updatedName = namField.getText();
+            String updatedBudget = budgetField.getText();
+            String updatedEmpCount = empCountField.getText();
+            String updatedDeptHeadSSN = deptHeadSSNField.getText();
+            String updatedBonus = bonusField.getText();
+
+            // Check if any changes were made
+            if (originalName.equals(updatedName) &&
+                originalBudget.equals(updatedBudget) &&
+                originalEmpCount.equals(updatedEmpCount) &&
+                originalDeptHeadSSN.equals(updatedDeptHeadSSN) &&
+                originalBonus.equals(updatedBonus)) {
+                showError("No changes made.");
+                fieldsPanel.setVisible(true); // Keep fields visible
+                namField.setEditable(false);
+                budgetField.setEditable(false);
+                empCountField.setEditable(false);
+                deptHeadSSNField.setEditable(false);
+                bonusField.setEditable(false);
+                saveBtn.setVisible(false); // Hide the Update button
+                return;
+            }
+
+            // Update the database
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                String sql = "UPDATE DEPARTMENT SET Name = ?, Budget = ?, Employee_Count = ?, Dep_Head_SSN = ?, Dep_Head_Bonus = ? WHERE Department_ID = ?";
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ps.setString(1, updatedName);
+                ps.setString(2, updatedBudget);
+                ps.setString(3, updatedEmpCount);
+                ps.setString(4, updatedDeptHeadSSN);
+                ps.setString(5, updatedBonus);
+                ps.setString(6, (String) tableModel.getValueAt(selectedRow, 0)); // Department_ID
+
+                int rows = ps.executeUpdate();
+                if (rows > 0) {
+                    JOptionPane.showMessageDialog(this, "Department updated successfully!");
+                    loadAllDepartments(); // Refresh the table
+                } else {
+                    showError("Failed to update department.");
+                }
+            } catch (Exception ex) {
+                showError("Error updating department: " + ex.getMessage());
+            }
+
+            // Disable editing after update
+            namField.setEditable(false);
+            budgetField.setEditable(false);
+            empCountField.setEditable(false);
+            deptHeadSSNField.setEditable(false);
+            bonusField.setEditable(false);
+
+            saveBtn.setVisible(false); // Hide the Update button
+        });
+
+        // Add the input panel to the bottom of the table wrapper
         tableWrapper.add(inputPanel, BorderLayout.SOUTH);
 
         mainContent.add(tableWrapper, BorderLayout.CENTER);
@@ -140,17 +288,13 @@ public class DepartmentPanel extends JPanel {
         // === ACTION LISTENERS - These say what happens when button is pressed ===
 
         searchBtn.addActionListener(e -> searchProduct());
-        showPII.addActionListener(e -> standIn());
-        showEmpSuper.addActionListener(e -> standIn());
-        showEmpAssets.addActionListener(e -> standIn());
-        showEmpPay.addActionListener(e -> standIn());
-        showAllBtn.addActionListener(e -> loadAllEmployees());
-        selectBtn.addActionListener(e -> standIn());
+        showEmp.addActionListener(e -> standIn());
+        showAllBtn.addActionListener(e -> loadAllDepartments());
         addBtn.addActionListener(e -> openCreationWizard());
 
         // === INITIAL LOAD OF TABLE ===
 
-        loadAllEmployees();
+        loadAllDepartments();
     }
 
 
@@ -237,7 +381,7 @@ public class DepartmentPanel extends JPanel {
 
     // === CALLED WHEN SHOW ALL PRESSED, SHOWS PRODUCT DETAILS ===
 
-    private void loadAllEmployees() {
+    private void loadAllDepartments() {
         tableModel.setColumnIdentifiers(new String[]{"Department_ID", "Name", "Budget", "Employee_Count", "Dep_Head_SSN", "Dep_Head_Bonus"});
         tableModel.setRowCount(0); // Clear the table before loading
 
@@ -319,7 +463,7 @@ public class DepartmentPanel extends JPanel {
                 int rows = ps.executeUpdate();
                 if (rows > 0) {
                     JOptionPane.showMessageDialog(this, "Department added successfully!");
-                    loadAllEmployees(); // Refresh the table
+                    loadAllDepartments(); // Refresh the table
                     wizard.dispose(); // Close the wizard
                 }
             } catch (Exception ex) {
@@ -331,5 +475,4 @@ public class DepartmentPanel extends JPanel {
         wizard.add(finishButton, BorderLayout.SOUTH);
         wizard.setVisible(true);
     }
-
 }
