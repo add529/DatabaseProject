@@ -3,265 +3,309 @@ import java.sql.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
-/**
- * A JPanel for managing departments: viewing, searching, adding, and updating department records.
- */
 public class DepartmentPanel extends JPanel {
 
-    // ==== UI Components ====
     private JTable departmentTable;
     private DefaultTableModel tableModel;
 
-    // Input fields for department details
-    private JTextField idField, nameField, budgetField, employeeCountField, headSSNField, bonusField;
-
-    // Action buttons
-    private JButton saveButton, updateButton;
-
-    // Search attributes (column names)
-    private static final String[] searchAttributes = {
+    private JTextField[] fields;
+    private String[] fieldNames = {
         "Department_ID", "Name", "Budget", "Employee_Count", "Dep_Head_SSN", "Dep_Head_Bonus"
     };
 
-    /**
-     * Constructor: Initializes the UI components and layout.
-     */
+    private JButton editButton, updateButton;
+    private JTextField searchField;
+    private JComboBox<String> searchAttributeBox;
+    private JPanel bottomPanel;
+    private boolean isEditable = false; // Track whether the form is in "edit" mode
+
     public DepartmentPanel() {
         setLayout(new BorderLayout(10, 10));
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        add(createControlPanel(), BorderLayout.WEST);     // Left: Search controls
-        add(createTablePanel(), BorderLayout.CENTER);     // Center: Table view
-        add(createFormPanel(), BorderLayout.SOUTH);       // Bottom: Input + Action buttons
+        // ===== LEFT CONTROL PANEL =====
 
-        attachEventHandlers();                            // Link buttons and table actions
-        loadDepartments();                                // Initial data load
-    }
-
-    // =========================
-    // UI COMPONENT CREATORS
-    // =========================
-
-    // Creates the left-hand search/filter panel
-    private JPanel createControlPanel() {
         JPanel controlPanel = new JPanel();
+        controlPanel.setBackground(new Color(240, 240, 240));
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
         controlPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JLabel searchLabel = new JLabel("Search by:");
-        JComboBox<String> attributeComboBox = new JComboBox<>(searchAttributes);
-        JTextField searchField = new JTextField();
-        JButton searchBtn = new JButton("Search");
-        JButton showAllBtn = new JButton("Show All");
+        JLabel searchByLabel = new JLabel("Search by:");
+        searchByLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        searchByLabel.setFont(new Font("Tahoma", Font.BOLD, 12));
+        controlPanel.add(searchByLabel);
 
-        // Keep components aligned
-        attributeComboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
-        searchField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        searchAttributeBox = new JComboBox<>(new String[] {
+            "Department_ID", "Name",
+        });
+        searchAttributeBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        searchAttributeBox.setFont(new Font("Tahoma", Font.PLAIN, 12));
+        searchAttributeBox.setMaximumSize(new Dimension(200, 25));
+        controlPanel.add(searchAttributeBox);
+        controlPanel.add(Box.createVerticalStrut(10));
 
-        // Layout components vertically
-        controlPanel.add(searchLabel);
-        controlPanel.add(attributeComboBox);
-        controlPanel.add(Box.createVerticalStrut(5));
+        JLabel searchFieldLabel = new JLabel("Search value:");
+        searchFieldLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        searchFieldLabel.setFont(new Font("Tahoma", Font.BOLD, 12));
+        controlPanel.add(searchFieldLabel);
+
+        searchField = new JTextField();
+        searchField.setMaximumSize(new Dimension(200, 25));
         controlPanel.add(searchField);
         controlPanel.add(Box.createVerticalStrut(10));
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        buttonPanel.add(searchBtn);
-        buttonPanel.add(showAllBtn);
-        controlPanel.add(buttonPanel);
+        JButton searchBtn = new JButton("Search");
+        JButton showAllBtn = new JButton("Show All");
+        JButton deleteBtn = new JButton("Delete");
+        JButton selectBtn = new JButton("Select");
 
-        // Event Handlers
-        showAllBtn.addActionListener(e -> loadDepartments());
-        searchBtn.addActionListener(e -> performSearch(attributeComboBox, searchField));
+        searchBtn.setMaximumSize(new Dimension(200, 30));
+        showAllBtn.setMaximumSize(new Dimension(200, 30));
+        deleteBtn.setMaximumSize(new Dimension(200, 30));
+        selectBtn.setMaximumSize(new Dimension(200, 30));
 
-        return controlPanel;
-    }
+        controlPanel.add(searchBtn);
+        controlPanel.add(Box.createVerticalStrut(10));
+        controlPanel.add(showAllBtn);
+        controlPanel.add(Box.createVerticalStrut(10));
+        controlPanel.add(deleteBtn);
+        controlPanel.add(Box.createVerticalStrut(10));
+        controlPanel.add(selectBtn);
 
-    // Creates the table area for displaying department records
-    private JScrollPane createTablePanel() {
+        add(controlPanel, BorderLayout.WEST);
+
+        // ===== CENTER TABLE PANEL =====
         tableModel = new DefaultTableModel(new String[]{
-            "Department ID", "Name", "Budget", "Employee Count", "Head SSN", "Bonus"
+            "Department_ID", "Name", "Budget", "Employee_Count", "Dep_Head_SSN", "Dep_Head_Bonus"
         }, 0);
 
         departmentTable = new JTable(tableModel);
-        departmentTable.getSelectionModel().addListSelectionListener(e -> populateFieldsFromSelectedRow());
-        return new JScrollPane(departmentTable);
-    }
+        departmentTable.setFillsViewportHeight(true);
+        departmentTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS); // Adjust columns to fit the table width
+        departmentTable.setRowHeight(20);
 
-    // Creates the bottom panel with input fields and action buttons
-    private JPanel createFormPanel() {
-        JPanel bottomPanel = new JPanel(new BorderLayout());
+        departmentTable.getColumnModel().getColumn(0).setPreferredWidth(150);
+        departmentTable.getColumnModel().getColumn(1).setPreferredWidth(100);
+        departmentTable.getColumnModel().getColumn(2).setPreferredWidth(100);
+        departmentTable.getColumnModel().getColumn(3).setPreferredWidth(150);
+        departmentTable.getColumnModel().getColumn(4).setPreferredWidth(100);
 
-        JPanel fieldsPanel = new JPanel(new GridLayout(3, 4, 10, 10));
-        fieldsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        departmentTable.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        departmentTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        departmentTable.setGridColor(Color.LIGHT_GRAY);
 
-        // Initialize text fields
-        idField = new JTextField();          nameField = new JTextField();
-        budgetField = new JTextField();      employeeCountField = new JTextField();
-        headSSNField = new JTextField();     bonusField = new JTextField();
+        JScrollPane scrollPane = new JScrollPane(departmentTable);
+        scrollPane.setPreferredSize(new Dimension(10, 10));
 
-        // Add fields with labels
-        fieldsPanel.add(new JLabel("Department ID:")); fieldsPanel.add(idField);
-        fieldsPanel.add(new JLabel("Name:"));          fieldsPanel.add(nameField);
-        fieldsPanel.add(new JLabel("Budget:"));        fieldsPanel.add(budgetField);
-        fieldsPanel.add(new JLabel("Employee Count:"));fieldsPanel.add(employeeCountField);
-        fieldsPanel.add(new JLabel("Head SSN:"));      fieldsPanel.add(headSSNField);
-        fieldsPanel.add(new JLabel("Bonus:"));         fieldsPanel.add(bonusField);
+        add(scrollPane, BorderLayout.CENTER);
 
-        // Save and Update buttons
-        JPanel actionButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        saveButton = new JButton("Save");
+        // ===== BOTTOM FORM PANEL (Initially hidden) =====
+        bottomPanel = new JPanel(new BorderLayout());
+        JPanel formPanel = new JPanel(new GridLayout(0, 4, 5, 5));
+        formPanel.setBorder(BorderFactory.createTitledBorder("Department Details"));
+        fields = new JTextField[fieldNames.length];
+
+        for (int i = 0; i < fieldNames.length; i++) {
+            formPanel.add(new JLabel(fieldNames[i] + ":"));
+            fields[i] = new JTextField();
+            formPanel.add(fields[i]);
+        }
+
+        JPanel buttonPanel = new JPanel();
+        editButton = new JButton("Edit");
         updateButton = new JButton("Update");
-        actionButtonPanel.add(saveButton);
-        actionButtonPanel.add(updateButton);
+        buttonPanel.add(editButton);
+        buttonPanel.add(updateButton);
 
-        bottomPanel.add(fieldsPanel, BorderLayout.CENTER);
-        bottomPanel.add(actionButtonPanel, BorderLayout.SOUTH);
-        return bottomPanel;
-    }
+        bottomPanel.add(formPanel, BorderLayout.CENTER);
+        bottomPanel.add(buttonPanel, BorderLayout.SOUTH);
+        bottomPanel.setVisible(false);
+        add(bottomPanel, BorderLayout.SOUTH);
 
-    // =========================
-    // EVENT HANDLERS
-    // =========================
 
-    private void attachEventHandlers() {
-        saveButton.addActionListener(e -> saveDepartment());
+
+        // ===== Event Listeners =====
+        searchBtn.addActionListener(e -> {
+            String attr = (String) searchAttributeBox.getSelectedItem();
+            String value = searchField.getText().trim();
+            if (value.isEmpty()) {
+                showError("Please enter a value to search.");
+                return;
+            }
+            searchDepartment(attr, value);
+        });
+
+        showAllBtn.addActionListener(e -> loadAllDepartments());
+        deleteBtn.addActionListener(e -> deleteSelectedDepartment());
+        selectBtn.addActionListener(e -> showSelectedDepartmentDetails());
+        editButton.addActionListener(e -> toggleEditMode());
         updateButton.addActionListener(e -> updateDepartment());
+
+        loadAllDepartments();
     }
 
-    private void performSearch(JComboBox<String> attributeBox, JTextField searchField) {
-        String attribute = attributeBox.getSelectedItem().toString();
-        String value = searchField.getText().trim();
-
-        if (value.isEmpty()) {
-            showError("Please enter a value to search.");
-            return;
+    private void toggleEditMode() {
+        isEditable = !isEditable; // Toggle between edit and view mode
+        for (JTextField field : fields) {
+            field.setEditable(isEditable);
         }
 
-        tableModel.setRowCount(0);
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "SELECT * FROM DEPARTMENT WHERE " + attribute + " = ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-
-            // Convert value type based on column
-            switch (attribute) {
-                case "Budget", "Dep_Head_Bonus" -> ps.setFloat(1, Float.parseFloat(value));
-                case "Employee_Count" -> ps.setInt(1, Integer.parseInt(value));
-                default -> ps.setString(1, value);
-            }
-
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                tableModel.addRow(new Object[]{
-                    rs.getString("Department_ID"),
-                    rs.getString("Name"),
-                    rs.getFloat("Budget"),
-                    rs.getInt("Employee_Count"),
-                    rs.getString("Dep_Head_SSN"),
-                    rs.getFloat("Dep_Head_Bonus")
-                });
-            }
-
-            if (tableModel.getRowCount() == 0) {
-                showError("No matching department found.");
-            }
-
-        } catch (Exception ex) {
-            showError("Search failed: " + ex.getMessage());
-        }
-    }
-
-    private void populateFieldsFromSelectedRow() {
-        int row = departmentTable.getSelectedRow();
-        if (row != -1) {
-            idField.setText(tableModel.getValueAt(row, 0).toString());
-            nameField.setText(tableModel.getValueAt(row, 1).toString());
-            budgetField.setText(tableModel.getValueAt(row, 2).toString());
-            employeeCountField.setText(tableModel.getValueAt(row, 3).toString());
-            headSSNField.setText(tableModel.getValueAt(row, 4).toString());
-            bonusField.setText(tableModel.getValueAt(row, 5).toString());
-        }
-    }
-
-    // =========================
-    // DATABASE OPERATIONS
-    // =========================
-
-    private void loadDepartments() {
-        tableModel.setRowCount(0);
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "SELECT Department_ID, Name, Budget, Employee_Count, Dep_Head_SSN, Dep_Head_Bonus FROM DEPARTMENT";
-            ResultSet rs = conn.createStatement().executeQuery(sql);
-            while (rs.next()) {
-                tableModel.addRow(new Object[]{
-                    rs.getString("Department_ID"),
-                    rs.getString("Name"),
-                    rs.getFloat("Budget"),
-                    rs.getInt("Employee_Count"),
-                    rs.getString("Dep_Head_SSN"),
-                    rs.getFloat("Dep_Head_Bonus")
-                });
-            }
-        } catch (Exception ex) {
-            showError("Error loading departments: " + ex.getMessage());
-        }
-    }
-
-    private void saveDepartment() {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "INSERT INTO DEPARTMENT (Department_ID, Name, Budget, Employee_Count, Dep_Head_SSN, Dep_Head_Bonus) VALUES (?, ?, ?, ?, ?, ?)";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, idField.getText().trim());
-            ps.setString(2, nameField.getText().trim());
-            ps.setFloat(3, Float.parseFloat(budgetField.getText().trim()));
-            ps.setInt(4, Integer.parseInt(employeeCountField.getText().trim()));
-            ps.setString(5, headSSNField.getText().trim());
-            ps.setFloat(6, Float.parseFloat(bonusField.getText().trim()));
-
-            int rows = ps.executeUpdate();
-            if (rows > 0) {
-                JOptionPane.showMessageDialog(this, "Department saved.");
-                loadDepartments();
-                clearFields();
-            }
-        } catch (Exception ex) {
-            showError("Save failed: " + ex.getMessage());
+        if (isEditable) {
+            editButton.setText("Save");
+        } else {
+            editButton.setText("Edit");
         }
     }
 
     private void updateDepartment() {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "UPDATE DEPARTMENT SET Name = ?, Budget = ?, Employee_Count = ?, Dep_Head_SSN = ?, Dep_Head_Bonus = ? WHERE Department_ID = ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, nameField.getText().trim());
-            ps.setFloat(2, Float.parseFloat(budgetField.getText().trim()));
-            ps.setInt(3, Integer.parseInt(employeeCountField.getText().trim()));
-            ps.setString(4, headSSNField.getText().trim());
-            ps.setFloat(5, Float.parseFloat(bonusField.getText().trim()));
-            ps.setString(6, idField.getText().trim());
+        String empNo = fields[0].getText(); // Assuming Department_ID is the first field
+        if (empNo.isEmpty()) {
+            showError("No Deparment selected to update.");
+            return;
+        }
 
+        StringBuilder sql = new StringBuilder("UPDATE DEPARTMENT SET ");
+        for (int i = 1; i < fieldNames.length; i++) {
+            sql.append(fieldNames[i]).append(" = ?");
+            if (i < fieldNames.length - 1) sql.append(", ");
+        }
+        sql.append(" WHERE Department_ID = ?");
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            PreparedStatement ps = conn.prepareStatement(sql.toString());
+            for (int i = 1; i < fieldNames.length; i++) {
+                ps.setString(i, fields[i].getText());
+            }
+            ps.setString(fieldNames.length, empNo);
             int rows = ps.executeUpdate();
             if (rows > 0) {
                 JOptionPane.showMessageDialog(this, "Department updated.");
-                loadDepartments();
-                clearFields();
+                loadAllDepartments();
+                toggleEditMode(); // Exit edit mode after update
+            } else {
+                showError("Update failed.");
             }
         } catch (Exception ex) {
-            showError("Update failed: " + ex.getMessage());
+            showError("Update error: " + ex.getMessage());
         }
     }
 
-    // =========================
-    // UTILITY METHODS
-    // =========================
+    private void loadAllDepartments() {
+        SwingWorker<Void, Object[]> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() {
+                try (Connection conn = DatabaseConnection.getConnection()) {
+                    String sql = "SELECT * FROM DEPARTMENT ORDER BY Name ASC";
+                    ResultSet rs = conn.createStatement().executeQuery(sql);
+                    while (rs.next()) {
+                        publish(new Object[]{
+                            rs.getString("Department_ID"),
+                            rs.getString("Name"),
+                            rs.getString("Budget"),
+                            rs.getString("Employee_Count"),
+                            rs.getString("Dep_Head_SSN"),
+                            rs.getString("Dep_Head_Bonus")
+                        });
+                    }
+                } catch (Exception ex) {
+                    SwingUtilities.invokeLater(() -> showError("Error loading Departments: " + ex.getMessage()));
+                }
+                return null;
+            }
 
-    private void clearFields() {
-        idField.setText("");
-        nameField.setText("");
-        budgetField.setText("");
-        employeeCountField.setText("");
-        headSSNField.setText("");
-        bonusField.setText("");
+            @Override
+            protected void process(java.util.List<Object[]> chunks) {
+                for (Object[] row : chunks) {
+                    tableModel.addRow(row);
+                }
+            }
+
+            @Override
+            protected void done() {
+                // Optionally do something after all rows are loaded
+            }
+        };
+        tableModel.setRowCount(0); // Clear table before loading
+        worker.execute();
+    }
+
+    private void searchDepartment(String attr, String value) {
+        tableModel.setRowCount(0);
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "SELECT * FROM DEPARTMENT WHERE " + attr + " = ? ORDER BY Name ASC";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, value);
+            ResultSet rs = ps.executeQuery();
+            boolean found = false;
+            while (rs.next()) {
+                tableModel.addRow(new Object[]{
+                    rs.getString("Department_ID"),
+                    rs.getString("Name"),
+                    rs.getString("Budget"),
+                    rs.getString("Employee_Count"),
+                    rs.getString("Dep_Head_SSN"),
+                    rs.getString("Dep_Head_Bonus")
+                });
+                found = true;
+            }
+            if (!found) {
+                showError("No Department found with " + attr + " = " + value);
+            }
+        } catch (Exception ex) {
+            showError("Search error: " + ex.getMessage());
+        }
+    }
+
+    private void deleteSelectedDepartment() {
+        int row = departmentTable.getSelectedRow();
+        if (row == -1) {
+            showError("Select an Department to delete.");
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this, "Delete this Department?", "Confirm", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String empNo = (String) departmentTable.getValueAt(row, 0);
+            String sql = "DELETE FROM DEPARTMENT WHERE Department_ID = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, empNo);
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                JOptionPane.showMessageDialog(this, "Deaprtment deleted.");
+                loadAllDepartments();
+            }
+        } catch (Exception ex) {
+            showError("Delete failed: " + ex.getMessage());
+        }
+    }
+
+    private void showSelectedDepartmentDetails() {
+        int row = departmentTable.getSelectedRow();
+        if (row == -1) {
+            showError("Select a Department from the table.");
+            return;
+        }
+
+        String empNo = (String) departmentTable.getValueAt(row, 0);
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "SELECT * FROM DEPARTMENT WHERE DEPARTMENT_ID = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, empNo);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                for (int i = 0; i < fieldNames.length; i++) {
+                    fields[i].setText(rs.getString(fieldNames[i]));
+                }
+                bottomPanel.setVisible(true);
+                revalidate();
+                repaint();
+            }
+        } catch (Exception ex) {
+            showError("Error retrieving Department details: " + ex.getMessage());
+        }
     }
 
     private void showError(String msg) {

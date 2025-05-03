@@ -16,7 +16,7 @@ public class EmployeePanel extends JPanel {
         "SuperSSN", "Product_ID", "Department_ID", "Employee_Type", "Pay_Group", "Office_ID"
     };
 
-    private JButton editButton, updateButton;
+    private JButton editButton, updateButton, addButton;
     private JTextField searchField;
     private JComboBox<String> searchAttributeBox;
     private JPanel bottomPanel;
@@ -26,7 +26,6 @@ public class EmployeePanel extends JPanel {
         setLayout(new BorderLayout(10, 10));
 
         // ===== LEFT CONTROL PANEL =====
-
         JPanel controlPanel = new JPanel();
         controlPanel.setBackground(new Color(240, 240, 240));
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
@@ -60,11 +59,13 @@ public class EmployeePanel extends JPanel {
         JButton showAllBtn = new JButton("Show All");
         JButton deleteBtn = new JButton("Delete");
         JButton selectBtn = new JButton("Select");
+        addButton = new JButton("Add"); // Add button for creating a new employee
 
         searchBtn.setMaximumSize(new Dimension(200, 30));
         showAllBtn.setMaximumSize(new Dimension(200, 30));
         deleteBtn.setMaximumSize(new Dimension(200, 30));
         selectBtn.setMaximumSize(new Dimension(200, 30));
+        addButton.setMaximumSize(new Dimension(200, 30)); // Set size for Add button
 
         controlPanel.add(searchBtn);
         controlPanel.add(Box.createVerticalStrut(10));
@@ -73,6 +74,8 @@ public class EmployeePanel extends JPanel {
         controlPanel.add(deleteBtn);
         controlPanel.add(Box.createVerticalStrut(10));
         controlPanel.add(selectBtn);
+        controlPanel.add(Box.createVerticalStrut(10));
+        controlPanel.add(addButton); // Add the Add button to the control panel
 
         add(controlPanel, BorderLayout.WEST);
 
@@ -124,9 +127,8 @@ public class EmployeePanel extends JPanel {
         bottomPanel.setVisible(false);
         add(bottomPanel, BorderLayout.SOUTH);
 
-
-
         // ===== Event Listeners =====
+        addButton.addActionListener(e -> openCreationWizard()); // Add action listener for Add button
         searchBtn.addActionListener(e -> {
             String attr = (String) searchAttributeBox.getSelectedItem();
             String value = searchField.getText().trim();
@@ -307,6 +309,218 @@ public class EmployeePanel extends JPanel {
         } catch (Exception ex) {
             showError("Error retrieving employee details: " + ex.getMessage());
         }
+    }
+
+    private void openCreationWizard() {
+        JDialog wizard = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Add New Employee", true);
+        wizard.setSize(500, 400);
+        wizard.setLocationRelativeTo(this);
+        wizard.setLayout(new BorderLayout(10, 10)); // Add padding around the dialog
+
+        // ===== CardLayout for Multi-Page Wizard =====
+        JPanel cardPanel = new JPanel(new CardLayout(10, 10)); // Add padding between cards
+        CardLayout cardLayout = (CardLayout) cardPanel.getLayout();
+
+        // Page Counter
+        JLabel pageCounter = new JLabel("Page 1 of X", JLabel.CENTER);
+        pageCounter.setFont(new Font("Tahoma", Font.BOLD, 14));
+
+        // Split fields into pages
+        int fieldsPerPage = 6; // Number of fields per page
+        java.util.List<String> visibleFields = new java.util.ArrayList<>();
+        for (String fieldName : fieldNames) {
+            if (!fieldName.equals("Employee_No") && !fieldName.equals("Last_Hired") && !fieldName.equals("Status") && !fieldName.equals("Pay_Group")) {
+                // Explicitly include Department_ID as an exception
+                if (fieldName.contains("ID") && !fieldName.equals("Department_ID")) {
+                    continue; // Skip other fields containing "ID"
+                }
+                visibleFields.add(fieldName);
+            }
+        }
+        int totalPages = (int) Math.ceil((double) visibleFields.size() / fieldsPerPage);
+        JTextField[] wizardFields = new JTextField[fieldNames.length];
+        JComboBox<String> departmentDropdown = new JComboBox<>(); // Dropdown for Department_IDs
+        JComboBox<String> sexDropdown = new JComboBox<>(new String[]{"M", "F"}); // Dropdown for Sex
+        JComboBox<String> employeeTypeDropdown = new JComboBox<>(new String[]{"ET-001", "ET-002", "ET-003"}); // Dropdown for Employee_Type
+
+        // Marital Status Radio Buttons
+        ButtonGroup maritalStatusGroup = new ButtonGroup();
+        JRadioButton maritalYes = new JRadioButton("Yes");
+        JRadioButton maritalNo = new JRadioButton("No");
+        maritalStatusGroup.add(maritalYes);
+        maritalStatusGroup.add(maritalNo);
+
+        // Disability Status Radio Buttons and Conditional Text Field
+        ButtonGroup disabilityStatusGroup = new ButtonGroup();
+        JRadioButton disabilityYes = new JRadioButton("Yes");
+        JRadioButton disabilityNo = new JRadioButton("No");
+        disabilityStatusGroup.add(disabilityYes);
+        disabilityStatusGroup.add(disabilityNo);
+
+        JTextField disabilityDescription = new JTextField();
+        disabilityDescription.setVisible(false); // Initially hidden
+
+        // Show/Hide Disability Description Field Based on Selection
+        disabilityYes.addActionListener(e -> disabilityDescription.setVisible(true));
+        disabilityNo.addActionListener(e -> disabilityDescription.setVisible(false));
+
+        // Populate department dropdown with Department_IDs
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "SELECT Department_ID FROM DEPARTMENT";
+            ResultSet rs = conn.createStatement().executeQuery(sql);
+            while (rs.next()) {
+                String departmentId = rs.getString("Department_ID"); // Fetch as String
+                departmentDropdown.addItem(departmentId); // Add Department_ID to dropdown
+            }
+        } catch (Exception ex) {
+            showError("Error loading departments: " + ex.getMessage());
+        }
+
+        for (int page = 0; page < totalPages; page++) {
+            JPanel pagePanel = new JPanel(new GridLayout(0, 2, 10, 10)); // Add padding between fields
+            pagePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Add padding around the page
+
+            for (int i = page * fieldsPerPage; i < Math.min((page + 1) * fieldsPerPage, visibleFields.size()); i++) {
+                String fieldName = visibleFields.get(i);
+                pagePanel.add(new JLabel(fieldName + ":"));
+                if (fieldName.equals("Sex")) {
+                    pagePanel.add(sexDropdown); // Add dropdown for Sex
+                } else if (fieldName.equals("Employee_Type")) {
+                    pagePanel.add(employeeTypeDropdown); // Add dropdown for Employee_Type
+                } else if (fieldName.equals("Department_ID")) { // Match Department_ID
+                    pagePanel.add(departmentDropdown); // Add dropdown for Department_IDs
+                } else if (fieldName.equals("Marital_Status")) {
+                    JPanel maritalPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                    maritalPanel.add(maritalYes);
+                    maritalPanel.add(maritalNo);
+                    pagePanel.add(maritalPanel); // Add marital status radio buttons
+                } else if (fieldName.equals("Disability_Status")) {
+                    JPanel disabilityPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                    disabilityPanel.add(disabilityYes);
+                    disabilityPanel.add(disabilityNo);
+                    pagePanel.add(disabilityPanel); // Add disability status radio buttons
+                    pagePanel.add(new JLabel("If Yes, Describe:"));
+                    pagePanel.add(disabilityDescription); // Add conditional text field
+                } else {
+                    JTextField field = new JTextField();
+                    wizardFields[i] = field;
+                    pagePanel.add(field);
+                }
+            }
+
+            cardPanel.add(pagePanel, "Page" + page);
+        }
+
+        // ===== Navigation Buttons =====
+        JPanel buttonPanel = new JPanel(new BorderLayout(10, 10)); // Add padding around buttons
+        JPanel navButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        JButton backButton = new JButton("Back");
+        JButton nextButton = new JButton("Next");
+        JButton finishButton = new JButton("Finish");
+
+        backButton.setEnabled(false); // Disable "Back" on the first page
+        finishButton.setVisible(false); // Hide "Finish" until the last page
+
+        // Add action listeners for navigation
+        final int[] currentPage = {0};
+        backButton.addActionListener(e -> {
+            currentPage[0]--;
+            cardLayout.show(cardPanel, "Page" + currentPage[0]);
+            nextButton.setVisible(true);
+            finishButton.setVisible(false);
+            pageCounter.setText("Page " + (currentPage[0] + 1) + " of " + totalPages);
+            if (currentPage[0] == 0) {
+                backButton.setEnabled(false);
+            }
+        });
+
+        nextButton.addActionListener(e -> {
+            currentPage[0]++;
+            cardLayout.show(cardPanel, "Page" + currentPage[0]);
+            backButton.setEnabled(true);
+            pageCounter.setText("Page " + (currentPage[0] + 1) + " of " + totalPages);
+            if (currentPage[0] == totalPages - 1) {
+                nextButton.setVisible(false);
+                finishButton.setVisible(true);
+            }
+        });
+
+        finishButton.addActionListener(e -> {
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                // Generate Employee_No
+                String employeeNo = "Emp-";
+                String countQuery = "SELECT COUNT(*) AS Total FROM EMPLOYEE";
+                ResultSet rs = conn.createStatement().executeQuery(countQuery);
+                if (rs.next()) {
+                    int count = rs.getInt("Total") + 1;
+                    employeeNo += String.format("%03d", count); // Format as Emp-XXX
+                }
+
+                // Build SQL query
+                StringBuilder sql = new StringBuilder("INSERT INTO EMPLOYEE (");
+                for (String fieldName : fieldNames) {
+                    if (!fieldName.equals("Employee_No") && !fieldName.contains("ID") && !fieldName.equals("Last_Hired") && !fieldName.equals("Status") && !fieldName.equals("Pay_Group")) {
+                        sql.append(fieldName).append(", ");
+                    }
+                }
+                sql.append("Employee_No, Department_ID, Product_ID, Last_Hired, Status, Pay_Group) VALUES (");
+                for (int i = 0; i < visibleFields.size(); i++) {
+                    sql.append("?, ");
+                }
+                sql.append("?, ?, ?, ?, ?, ?)");
+
+                PreparedStatement ps = conn.prepareStatement(sql.toString());
+
+                // Set visible fields
+                for (int i = 0; i < visibleFields.size(); i++) {
+                    ps.setString(i + 1, wizardFields[i].getText());
+                }
+
+                // Set hidden fields
+                ps.setString(visibleFields.size() + 1, employeeNo); // Employee_No
+                String selectedDepartmentId = (String) departmentDropdown.getSelectedItem(); // Get selected Department_ID
+                ps.setString(visibleFields.size() + 2, selectedDepartmentId); // Department_ID
+                ps.setInt(visibleFields.size() + 3, 0); // Product_ID (default or fetched separately)
+                ps.setDate(visibleFields.size() + 4, new java.sql.Date(System.currentTimeMillis())); // Last_Hired
+                ps.setString(visibleFields.size() + 5, "Active"); // Status
+
+                // Determine Pay_Group based on Employee_Type
+                String selectedEmployeeType = (String) employeeTypeDropdown.getSelectedItem();
+                String payGroup = selectedEmployeeType.equals("ET-001") ? "PG-001" : "PG-002";
+                ps.setString(visibleFields.size() + 6, payGroup); // Pay_Group
+
+                // Set Marital_Status
+                ps.setInt(visibleFields.size() + 7, maritalYes.isSelected() ? 0 : 1);
+
+                // Set Disability_Status
+                if (disabilityYes.isSelected()) {
+                    ps.setString(visibleFields.size() + 8, disabilityDescription.getText());
+                } else {
+                    ps.setNull(visibleFields.size() + 8, java.sql.Types.VARCHAR);
+                }
+
+                int rows = ps.executeUpdate();
+                if (rows > 0) {
+                    JOptionPane.showMessageDialog(this, "Employee added successfully!");
+                    loadAllEmployees(); // Refresh the table
+                    wizard.dispose(); // Close the wizard
+                }
+            } catch (Exception ex) {
+                showError("Error adding employee: " + ex.getMessage());
+            }
+        });
+
+        navButtons.add(backButton);
+        navButtons.add(nextButton);
+        navButtons.add(finishButton);
+
+        buttonPanel.add(pageCounter, BorderLayout.NORTH); // Add page counter
+        buttonPanel.add(navButtons, BorderLayout.SOUTH);
+
+        // ===== Add Components to Wizard =====
+        wizard.add(cardPanel, BorderLayout.CENTER);
+        wizard.add(buttonPanel, BorderLayout.SOUTH);
+        wizard.setVisible(true);
     }
 
     private void showError(String msg) {
