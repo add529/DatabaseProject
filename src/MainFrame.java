@@ -38,8 +38,8 @@ public class MainFrame extends JFrame {
         JScrollPane employeeScrollPane = new JScrollPane(employeePanel);
         employeeScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         employeeScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        contentPanel.add(employeeScrollPane, "employee");
 
+        contentPanel.add(employeeScrollPane, "employee");
         contentPanel.add(new JScrollPane(new DepartmentPanel()), "department");
         contentPanel.add(new JScrollPane(new OfficePanel()), "office");
         contentPanel.add(new JScrollPane(new ProductPanel()), "products");
