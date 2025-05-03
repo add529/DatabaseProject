@@ -19,12 +19,12 @@ public class MainFrame extends JFrame {
 
         JButton employeeBtn = new JButton("Employee");
         JButton departmentBtn = new JButton("Department");
-        JButton officeBtn = new JButton("Office");
+        JButton payBtn = new JButton("Pay Group");
         JButton productsBtn = new JButton("Products");
 
         toolBar.add(employeeBtn);
         toolBar.add(departmentBtn);
-        toolBar.add(officeBtn);
+        toolBar.add(payBtn);
         toolBar.add(productsBtn);
 
         add(toolBar, BorderLayout.NORTH);
@@ -41,7 +41,7 @@ public class MainFrame extends JFrame {
 
         contentPanel.add(employeeScrollPane, "employee");
         contentPanel.add(new JScrollPane(new DepartmentPanel()), "department");
-        contentPanel.add(new JScrollPane(new OfficePanel()), "office");
+        contentPanel.add(new JScrollPane(new PayPanel()), "paygroup");
         contentPanel.add(new JScrollPane(new ProductPanel()), "products");
 
 
@@ -50,7 +50,7 @@ public class MainFrame extends JFrame {
         // ===== Button Listeners =====
         employeeBtn.addActionListener(e -> cardLayout.show(contentPanel, "employee"));
         departmentBtn.addActionListener(e -> cardLayout.show(contentPanel, "department"));
-        officeBtn.addActionListener(e -> cardLayout.show(contentPanel, "office"));
+        payBtn.addActionListener(e -> cardLayout.show(contentPanel, "paygroup"));
         productsBtn.addActionListener(e -> cardLayout.show(contentPanel, "products"));
     }
 }

@@ -3,7 +3,7 @@ import java.sql.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
-public class OfficePanel extends JPanel {
+public class PayPanel extends JPanel {
 
     private final JTable table;
     private final DefaultTableModel tableModel;
@@ -24,7 +24,7 @@ public class OfficePanel extends JPanel {
     private JTextField payRateField, payFrequencyField, payPeriodField, overtimeRateField, nameField;
     private JButton editBtn, saveBtn;
 
-    public OfficePanel() {
+    public PayPanel() {
 
         setLayout(new BorderLayout());
         setOpaque(false);
