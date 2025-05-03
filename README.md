@@ -5,8 +5,10 @@
 - Write tutorial
 - Make Flyer
 - Make Presentation
-- Develop GUI more
-- Add data to tables
+
+## Tasks for Software
+- Fix add employee wizard
+-
 
 ---
 
