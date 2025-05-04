@@ -288,7 +288,45 @@ public class DepartmentPanel extends JPanel {
         // === ACTION LISTENERS - These say what happens when button is pressed ===
 
         searchBtn.addActionListener(e -> searchProduct());
-        showEmp.addActionListener(e -> standIn());
+        showEmp.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow == -1) {
+                showError("Please select a department first.");
+                return;
+            }
+
+            // Get the selected department's ID
+            String departmentId = (String) tableModel.getValueAt(selectedRow, 0);
+
+            // Clear the table and set new column headers for employees
+            tableModel.setColumnIdentifiers(new String[]{"Employee_No", "First_Name", "Last_Name", "Job_Description", "Status"});
+            tableModel.setRowCount(0); // Clear existing rows
+
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                // Query to fetch employees for the selected department
+                String sql = "SELECT Employee_No, FName AS First_Name, LName AS Last_Name, Job_Desc AS Job_Description, Status FROM EMPLOYEE WHERE Department_ID = ?";
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.setString(1, departmentId);
+                ResultSet rs = stmt.executeQuery();
+
+                // Populate the table with employee data
+                while (rs.next()) {
+                    tableModel.addRow(new Object[]{
+                        rs.getString("Employee_No"),
+                        rs.getString("First_Name"),
+                        rs.getString("Last_Name"),
+                        rs.getString("Job_Description"),
+                        rs.getString("Status")
+                    });
+                }
+
+                if (tableModel.getRowCount() == 0) {
+                    showError("No employees found for the selected department.");
+                }
+            } catch (Exception ex) {
+                showError("Error loading employees: " + ex.getMessage());
+            }
+        });
         showAllBtn.addActionListener(e -> loadAllDepartments());
         addBtn.addActionListener(e -> openCreationWizard());
 
