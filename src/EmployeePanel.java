@@ -44,11 +44,11 @@ public class EmployeePanel extends JPanel {
         JButton showPII = new JButton("PII"); //Instantiate PII Button
         JButton showEmpAssets = new JButton("Assets"); //Instantiate Assets Button
         JButton showEmpSuper = new JButton("Supervisors"); //Instantiate Supervisors Button
-        JButton showEmpPay = new JButton("Type and Pay"); //Instantiate Type and Pay Button
+        JButton showEmpLoc = new JButton("Location"); //Instantiate Location
 
 
         //Navigation Bar Button Formatting
-        for (JButton btn : new JButton[]{showEmpSuper, showEmpPay, showPII, showEmpAssets, selectBtn, showAllBtn}) {
+        for (JButton btn : new JButton[]{showEmpSuper, showEmpLoc, showPII, showEmpAssets, selectBtn, showAllBtn}) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
             btn.setMaximumSize(new Dimension(120, 40));
             btn.setBackground(DARK_BG);
@@ -65,7 +65,7 @@ public class EmployeePanel extends JPanel {
         navBar.add(Box.createVerticalStrut(10));
         navBar.add(showEmpSuper);
         navBar.add(Box.createVerticalStrut(10));
-        navBar.add(showEmpPay);
+        navBar.add(showEmpLoc);
         navBar.add(Box.createVerticalStrut(10));
         navBar.add(showEmpAssets);
 
@@ -145,10 +145,10 @@ public class EmployeePanel extends JPanel {
         // === ACTION LISTENERS - These say what happens when button is pressed ===
 
         searchBtn.addActionListener(e -> searchProduct());
-        showPII.addActionListener(e -> standIn());
-        showEmpSuper.addActionListener(e -> standIn());
-        showEmpAssets.addActionListener(e -> standIn());
-        showEmpPay.addActionListener(e -> standIn());
+        showPII.addActionListener(e -> showEmployeePII());
+        showEmpSuper.addActionListener(e -> showEmployeeSupervisors());
+        showEmpAssets.addActionListener(e -> showEmployeeAssets());
+        showEmpLoc.addActionListener(e -> showEmployeeLocations());
         showAllBtn.addActionListener(e -> loadAllEmployees());
         selectBtn.addActionListener(e -> {
     // Get the selected row
@@ -283,13 +283,160 @@ public class EmployeePanel extends JPanel {
         selectBtn.setEnabled(true); // Enable Select button
     }
 
-        // === CALLED WHEN DEPARTMENTS PRESSED, SHOWS PRODUCT TO DEPARTMENT DETAILS ===
+        // === CALLED WHEN PII PRESSED, SHOWS EMPLOYEE PERSONALLY IDENTIFIABLE INFORMATION ===
 
-        private void standIn() {
-            
+        private void showEmployeePII() {
+            tableModel.setColumnIdentifiers(new String[]{"Employee SSN", "First Name", "Last Name", "DOB", "Sex", "Disability Status"});
+            tableModel.setRowCount(0);
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                String sql = """
+                        SELECT 
+                            e.SSN, 
+                            e.FName, 
+                            e.LName, 
+                            e.DOB, 
+                            e.Sex, 
+                            e.Disability_Status
+                        FROM 
+                            EMPLOYEE e;
+                        """;
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    tableModel.addRow(new Object[]{
+                        rs.getString("SSN"),
+                        rs.getString("FName"),
+                        rs.getString("LName"),
+                        rs.getString("DOB"),
+                        rs.getString("Sex"),
+                        rs.getString("Disability_Status")
+                    });
+                }
+            } catch (Exception ex) {
+                showError("Error loading employee-pii data: " + ex.getMessage());
+            }
+            padTableRows(35);
+            selectBtn.setEnabled(false); // Disable Select button
         }
     
-    
-    // === CALLED WHEN ADD BUTTON PRESSED, CONTROLS MODAL ===
+        // === CALLED WHEN SUPERVISORS PRESSED, SHOWS EMPLOYEE SUPERVISORS ===
+
+        private void showEmployeeSupervisors() {
+            tableModel.setColumnIdentifiers(new String[]{"Employee No", "First Name", "Last Name", "Supervisor No", "Super First", "Super Last"});
+            tableModel.setRowCount(0);
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                String sql = """
+                           SELECT 
+                                e.Employee_No,
+                                e.FName,
+                                e.LName,
+                                e.SuperSSN,
+                                s.FName AS "Super_First",
+                                s.LName AS "Super_Last"
+                            FROM 
+                                EMPLOYEE e
+                            LEFT JOIN 
+                                EMPLOYEE s 
+                            ON 
+                                e.SuperSSN = s.SSN;
+                            """;
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    tableModel.addRow(new Object[]{
+                        rs.getString("Employee_No"),
+                        rs.getString("FName"),
+                        rs.getString("LName"),
+                        rs.getString("SuperSSN"),
+                        rs.getString("Super_First"),
+                        rs.getString("Super_Last")
+                    });
+                }
+            } catch (Exception ex) {
+                showError("Error loading employee-super data: " + ex.getMessage());
+            }
+            padTableRows(35);
+            selectBtn.setEnabled(false); // Disable Select button
+        }
+
+        // === CALLED WHEN LOCATIONS PRESSED, SHOWS EMPLOYEE OFFICES AND LOCATIONS ===
+
+        private void showEmployeeLocations() {
+            tableModel.setColumnIdentifiers(new String[]{"Employee No", "First Name", "Last Name", "Home City", "Home Office", "Office Location"});
+            tableModel.setRowCount(0);
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                String sql = """
+                    SELECT 
+                        e.Employee_No, 
+                        e.FName, 
+                        e.LName, 
+                        e.Location, 
+                        o.Name, 
+                        o.Location AS 'Office_Location'
+                    FROM 
+                        EMPLOYEE e
+                    JOIN 
+                        OFFICE o
+                    ON
+                        e.Office_ID = o.Office_ID;
+                """;
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    tableModel.addRow(new Object[]{
+                        rs.getString("Employee_No"),
+                        rs.getString("FName"),
+                        rs.getString("LName"),
+                        rs.getString("Location"),
+                        rs.getString("Name"),
+                        rs.getString("Office_Location")
+                    });
+                }
+            } catch (Exception ex) {
+                showError("Error loading employee-office data: " + ex.getMessage());
+            }
+            padTableRows(35);
+            selectBtn.setEnabled(false); // Disable Select button
+        }
+
+    // === CALLED WHEN ASSETS PRESSED, EMPLOYEE ASSETS SHOWN ===
    
+    private void showEmployeeAssets() {
+        tableModel.setColumnIdentifiers(new String[]{"Employee No", "First Name", "Last Name", "Asset ID", "Asset Type", "Warranty Exp. Date"});
+        tableModel.setRowCount(0);
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = """
+                SELECT 
+                    e.Employee_No, 
+                    e.FName, 
+                    e.LName, 
+                    a.Asset_ID, 
+                    a.Type,
+                    a.Warrant_Exp_Date
+                FROM 
+                    EMPLOYEE e
+                JOIN 
+                    ASSET a
+                ON
+                    e.Employee_No = a.Employee_No;
+                """;
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                tableModel.addRow(new Object[]{
+                    rs.getString("Employee_No"),
+                    rs.getString("FName"),
+                    rs.getString("LName"),
+                    rs.getString("Asset_ID"),
+                    rs.getString("Type"),
+                    rs.getString("Warrant_Exp_Date")
+                });
+            }
+        } catch (Exception ex) {
+            showError("Error loading employee-asset data: " + ex.getMessage());
         }
+        padTableRows(35);
+        selectBtn.setEnabled(false); // Disable Select button
+    }
+
+}
