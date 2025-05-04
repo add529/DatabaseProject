@@ -43,13 +43,14 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
         JButton showAllBtn = new JButton("Show All"); //Instantiate Show All Button
         setSuperBtn = new JButton("Set Super"); //Instantiate 
         JButton showPII = new JButton("PII"); //Instantiate PII Button
+        JButton showContact = new JButton("Contacts"); //Instantiate PII Button
         JButton showEmpAssets = new JButton("Assets"); //Instantiate Assets Button
         JButton showEmpSuper = new JButton("Supervisors"); //Instantiate Supervisors Button
-        JButton showEmpLoc = new JButton("Location"); //Instantiate Location
+        JButton showEmpLoc = new JButton("Locations"); //Instantiate Location
 
 
         //Navigation Bar Button Formatting
-        for (JButton btn : new JButton[]{setSuperBtn, showEmpSuper, showEmpLoc, showPII, showEmpAssets, selectBtn, showAllBtn}) {
+        for (JButton btn : new JButton[]{showContact, setSuperBtn, showEmpSuper, showEmpLoc, showPII, showEmpAssets, selectBtn, showAllBtn}) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
             btn.setPreferredSize(new Dimension(120, 40));
             btn.setMinimumSize(new Dimension(120, 40));
@@ -73,6 +74,8 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
         navBar.add(showEmpLoc);
         navBar.add(Box.createVerticalStrut(10));
         navBar.add(showEmpAssets);
+        navBar.add(Box.createVerticalStrut(10));
+        navBar.add(showContact);
 
         //Add Navigation Bar to Panel
         add(navBar, BorderLayout.WEST);
@@ -151,6 +154,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
 
         searchBtn.addActionListener(e -> searchProduct());
         showPII.addActionListener(e -> showEmployeePII());
+        showContact.addActionListener(e -> showEmployeeContact());
         setSuperBtn.addActionListener(e -> openSuperDialog());
         showEmpSuper.addActionListener(e -> showEmployeeSupervisors());
         showEmpAssets.addActionListener(e -> showEmployeeAssets());
@@ -296,6 +300,43 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
 
         // === CALLED WHEN PII PRESSED, SHOWS EMPLOYEE PERSONALLY IDENTIFIABLE INFORMATION ===
 
+        private void showEmployeeContact() {
+            tableModel.setColumnIdentifiers(new String[]{"Employee No", "First Name", "Last Name", "Phone", "Email"});
+            tableModel.setRowCount(0);
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                String sql = """
+                        SELECT
+                            e.Employee_No,
+                            e.FName,
+                            e.LName,
+                            p.Phone_Num,
+                            m.Email_Address
+                        FROM
+                            EMPLOYEE e
+                        JOIN
+                            PHONE p ON e.Employee_No = p.Employee_No
+                        JOIN
+                            EMAIL m ON m.Employee_No = p.Employee_No;
+                        """;
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    tableModel.addRow(new Object[]{
+                        rs.getString("Employee_No"),
+                        rs.getString("FName"),
+                        rs.getString("LName"),
+                        rs.getString("Phone_Num"),
+                        rs.getString("Email_Address")
+                    });
+                }
+            } catch (Exception ex) {
+                showError("Error loading employee-contact data: " + ex.getMessage());
+            }
+            padTableRows(35);
+            selectBtn.setEnabled(false); // Disable Select button
+            setSuperBtn.setEnabled(false);
+        }
+
         private void showEmployeePII() {
             tableModel.setColumnIdentifiers(new String[]{"Employee SSN", "First Name", "Last Name", "DOB", "Sex", "Disability Status"});
             tableModel.setRowCount(0);
@@ -373,6 +414,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
             setSuperBtn.setEnabled(true); // Disable Select button
         }
 
+        
         // === CALLED WHEN LOCATIONS PRESSED, SHOWS EMPLOYEE OFFICES AND LOCATIONS ===
 
         private void showEmployeeLocations() {
