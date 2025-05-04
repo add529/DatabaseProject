@@ -109,31 +109,13 @@ public class DepartmentPanel extends JPanel {
         
                 inputPanel.setBackground(BOT_GRADIENT);
                 inputPanel.setPreferredSize(new Dimension(0, 80));
-                inputPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 13, 10));
+                inputPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
         
-                JTextField idField = new JTextField(5);
-                JTextField nameField = new JTextField(10);
-                JTextField budgetField = new JTextField(9);
-                JTextField empCountField = new JTextField(5);
-                JTextField headSSNField = new JTextField(6);
-                JTextField headBonusField = new JTextField(6);
                 JButton addBtn = new JButton("Add Department");
         
                 addBtn.setBackground(DARK_BG);
                 addBtn.setForeground(Color.WHITE);
         
-                inputPanel.add(new JLabel("Dept ID:"));
-                inputPanel.add(idField);
-                inputPanel.add(new JLabel("Name:"));
-                inputPanel.add(nameField);
-                inputPanel.add(new JLabel("Budget:"));
-                inputPanel.add(budgetField);
-                inputPanel.add(new JLabel("Emp Count:"));
-                inputPanel.add(empCountField);
-                inputPanel.add(new JLabel("Dept Head SSN:"));
-                inputPanel.add(headSSNField);
-                inputPanel.add(new JLabel("Dept Head Bonus:"));
-                inputPanel.add(headBonusField);
                 inputPanel.add(addBtn);
         
                 tableWrapper.add(inputPanel, BorderLayout.SOUTH);
@@ -147,38 +129,7 @@ public class DepartmentPanel extends JPanel {
                 showDeptEmpl.addActionListener(e -> showEmpWithDept());
                 showAllBtn.addActionListener(e -> loadAllDepts());
                 selectBtn.addActionListener(e -> openEditDialog());
-                addBtn.addActionListener(e -> {
-                    String id = idField.getText().trim();
-                    String name = nameField.getText().trim();
-                    String budget = nameField.getText().trim();
-                    String emp_count = empCountField.getText().trim();
-                    String head_ssn = headSSNField.getText().trim();
-                    String head_bonus = headBonusField.getText().trim();
-                
-                    if (id.isEmpty() || name.isEmpty() || name.isEmpty() || emp_count.isEmpty() || head_ssn.isEmpty() || head_bonus.isEmpty()) {
-                        showError("All fields must be filled to add a department.");
-                        return;
-                    }
-                
-                    try (Connection conn = DatabaseConnection.getConnection()) {
-                        String sql = "INSERT INTO DEPARTMENT (Department_ID, Name, Budget, Employee_Count, Dep_Head_SSN, Dep_Head_Bonus) VALUES (?, ?, ?, ?, ?, ?)";
-                        PreparedStatement stmt = conn.prepareStatement(sql);
-                        stmt.setString(1, id);
-                        stmt.setString(2, name);
-                        stmt.setString(3, budget);
-                        stmt.setString(4, emp_count);
-                        stmt.setString(5, head_ssn);
-                        stmt.setString(6, head_bonus);
-                        stmt.executeUpdate();
-                
-                        loadAllDepts(); // refresh table
-                        idField.setText(""); nameField.setText(""); budgetField.setText("");
-                        empCountField.setText(""); headSSNField.setText(""); headBonusField.setText("");
-                    } catch (Exception ex) {
-                        showError("Error adding department: " + ex.getMessage());
-                    }
-                });
-                
+                addBtn.addActionListener(e -> openCreationWizard());
         
                 // === INITIAL LOAD OF TABLE ===
         
@@ -233,6 +184,71 @@ public class DepartmentPanel extends JPanel {
                 JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
             }
         
+              // === CALLED WHEN ADD BUTTON PRESSED, CONTROLS MODAL ===
+
+    private void openCreationWizard() {
+        JDialog wizard = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Add New Product", true);
+        wizard.setSize(500, 400);
+        wizard.setLocationRelativeTo(this);
+        wizard.setLayout(new BorderLayout(10, 10)); // Add padding around the dialog
+
+        // Fields for the product
+        String[] fieldNames = {"Name", "Description", "Status", "Version", "Department_ID"};
+        JTextField[] wizardFields = new JTextField[fieldNames.length];
+
+        JPanel fieldsPanel = new JPanel(new GridLayout(0, 2, 10, 10)); // Add padding between fields
+        fieldsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Add padding around the panel
+
+        // Add fields to the wizard
+        for (int i = 0; i < fieldNames.length; i++) {
+            String fieldName = fieldNames[i];
+            fieldsPanel.add(new JLabel(fieldName + ":"));
+            JTextField field = new JTextField();
+            wizardFields[i] = field;
+            fieldsPanel.add(field);
+        }
+
+        JButton finishButton = new JButton("Finish");
+        finishButton.addActionListener(e -> {
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                // Generate a unique Product_ID
+                String productId = "D-";
+                String countQuery = "SELECT COUNT(*) AS Total FROM DEPARTMENT";
+                ResultSet rs = conn.createStatement().executeQuery(countQuery);
+                if (rs.next()) {
+                    int count = rs.getInt("Total") + 1;
+                    productId += String.format("%03d", count); // Format as P-XXX
+                }
+
+                // Build SQL query
+                String sql = "INSERT INTO DEPARTMENT (Department_ID, Name, Budget, Employee_Count, Dep_Head_SSN, Dep_Head_Bonus) VALUES (?, ?, ?, ?, ?, ?)";
+                PreparedStatement ps = conn.prepareStatement(sql);
+
+                // Set Product_ID
+                ps.setString(1, productId);
+
+                // Set other fields
+                for (int i = 0; i < fieldNames.length; i++) {
+                    ps.setString(i + 2, wizardFields[i].getText());
+                }
+
+                int rows = ps.executeUpdate();
+                if (rows > 0) {
+                    JOptionPane.showMessageDialog(this, "Department added successfully!");
+                    loadAllDepts(); // Refresh the table
+                    wizard.dispose(); // Close the wizard
+                }
+            } catch (Exception ex) {
+                showError("Error adding product: " + ex.getMessage());
+            }
+        });
+
+        wizard.add(fieldsPanel, BorderLayout.CENTER);
+        wizard.add(finishButton, BorderLayout.SOUTH);
+        wizard.setVisible(true);
+    }
+
+            
             // === CALLED WHEN SEARCH BUTTON PRESSED, CONTROLS SEARCH PROCESS ===
         
             private void searchDept() {

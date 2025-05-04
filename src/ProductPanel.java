@@ -366,69 +366,6 @@ public class ProductPanel extends JPanel {
         wizard.setVisible(true);
     }
 
-    // === Update the database when the "Update" button is clicked ===
-    private void updateProduct() {
-        int selectedRow = table.getSelectedRow();
-        if (selectedRow == -1) {
-            showError("Please select a Product to update.");
-            return;
-        }
-
-        // Get the original values from the table
-        String originalProductID = (String) tableModel.getValueAt(selectedRow, 0);
-        String originalName = (String) tableModel.getValueAt(selectedRow, 1);
-        String originalDescription = (String) tableModel.getValueAt(selectedRow, 2);
-        String originalStatus = (String) tableModel.getValueAt(selectedRow, 3);
-        String originalVersion = (String) tableModel.getValueAt(selectedRow, 4);
-        String originalDepartmentID = (String) tableModel.getValueAt(selectedRow, 5);
-
-        // Get the updated values from the input fields
-        String updatedName = NameField.getText();
-        String updatedDescription = DescriptionField.getText();
-        String updatedStatus = statusField.getText();
-        String updatedVersion = versionField.getText();
-        String updatedDepartmentID = nameField.getText(); // Assuming this is the Department_ID field
-
-        // Check if any changes were made
-        if (originalName.equals(updatedName) &&
-            originalDescription.equals(updatedDescription) &&
-            originalStatus.equals(updatedStatus) &&
-            originalVersion.equals(updatedVersion) &&
-            originalDepartmentID.equals(updatedDepartmentID)) {
-            showError("No changes made.");
-            return;
-        }
-
-        // Update the database
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "UPDATE PRODUCT SET Name = ?, Description = ?, Status = ?, Version = ?, Department_ID = ? WHERE Product_ID = ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, updatedName);
-            ps.setString(2, updatedDescription);
-            ps.setString(3, updatedStatus);
-            ps.setString(4, updatedVersion);
-            ps.setString(5, updatedDepartmentID);
-            ps.setString(6, originalProductID);
-
-            int rows = ps.executeUpdate();
-            if (rows > 0) {
-                JOptionPane.showMessageDialog(this, "Product updated successfully!");
-                loadAllProducts(); // Refresh the table
-            } else {
-                showError("Failed to update Product.");
-            }
-        } catch (Exception ex) {
-            showError("Error updating Product: " + ex.getMessage());
-        }
-
-        // Disable editing after update
-        NameField.setEditable(false);
-        DescriptionField.setEditable(false);
-        statusField.setEditable(false);
-        versionField.setEditable(false);
-        nameField.setEditable(false);
-    }
-
       // === CALLED WHEN SELECT BUTTON PRESSED, CONTROLS MODAL ===
 
       private void openEditDialog() {

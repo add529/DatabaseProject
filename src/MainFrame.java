@@ -42,7 +42,7 @@ public class MainFrame extends JFrame {
         contentPanel.add(employeeScrollPane, "employee");
         contentPanel.add(new JScrollPane(new DepartmentPanel()), "department");
         contentPanel.add(new JScrollPane(new PayPanel()), "paygroup");
-        contentPanel.add(new JScrollPane(new ProductPanel()), "products");
+        contentPanel.add(new JScrollPane(new ProductPanel()), "product");
 
 
         add(contentPanel, BorderLayout.CENTER);
@@ -51,6 +51,6 @@ public class MainFrame extends JFrame {
         employeeBtn.addActionListener(e -> cardLayout.show(contentPanel, "employee"));
         departmentBtn.addActionListener(e -> cardLayout.show(contentPanel, "department"));
         payBtn.addActionListener(e -> cardLayout.show(contentPanel, "paygroup"));
-        productsBtn.addActionListener(e -> cardLayout.show(contentPanel, "products"));
+        productsBtn.addActionListener(e -> cardLayout.show(contentPanel, "product"));
     }
 }
