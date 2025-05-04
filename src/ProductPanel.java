@@ -14,8 +14,6 @@ public class ProductPanel extends JPanel {
     private final Color TOP_GRADIENT = new Color (0x9ed7cf);
     private final Color BOT_GRADIENT = new Color (0xd0e8bd);
 
-    private JTextField NameField, DescriptionField, statusField, versionField, nameField, productIdField, departmentIdField;
-
     public ProductPanel() {
 
         setLayout(new BorderLayout());
@@ -38,6 +36,8 @@ public class ProductPanel extends JPanel {
         //Navigation Bar Button Formatting
         for (JButton btn : new JButton[]{selectBtn, showAllBtn}) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+            btn.setPreferredSize(new Dimension(120, 40));
+            btn.setMinimumSize(new Dimension(120, 40));
             btn.setMaximumSize(new Dimension(120, 40));
             btn.setBackground(DARK_BG);
             btn.setForeground(Color.WHITE);
@@ -66,7 +66,7 @@ public class ProductPanel extends JPanel {
         //Search Panel Button Formatting
         searchPanel.setBackground(new Color(230, 255, 245));
         searchField = new JTextField(20);
-        searchBtn = new JButton("Search Products By ID");
+        searchBtn = new JButton("Search Product By ID");
         searchBtn.setBackground(DARK_BG);
         searchBtn.setForeground(Color.WHITE);
 
@@ -232,7 +232,7 @@ public class ProductPanel extends JPanel {
     // === CALLED WHEN SHOW ALL PRESSED, SHOWS PRODUCT DETAILS ===
 
     private void loadAllProducts() {
-        tableModel.setColumnIdentifiers(new String[]{"Product_ID", "Name", "Description", "Status", "Version", "Department_ID"});
+        tableModel.setColumnIdentifiers(new String[]{"Product ID", "Name", "Description", "Status", "Version", "Department ID"});
         tableModel.setRowCount(0);
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "SELECT Product_ID, Name, Description, Status, Version, Department_ID FROM PRODUCT";

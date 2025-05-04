@@ -38,6 +38,8 @@ public class PayPanel extends JPanel {
         //Navigation Bar Button Formatting
         for (JButton btn : new JButton[]{showPayET, showEmpPay, selectBtn, showAllBtn}) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+            btn.setPreferredSize(new Dimension(120, 40));
+            btn.setMinimumSize(new Dimension(120, 40));
             btn.setMaximumSize(new Dimension(120, 40));
             btn.setBackground(DARK_BG);
             btn.setForeground(Color.WHITE);
@@ -234,7 +236,7 @@ public class PayPanel extends JPanel {
 
     private void loadAllPayGroups() {
 
-        tableModel.setColumnIdentifiers(new String[]{"PayGroup_ID", "Pay_Rate", "Pay_Frequency", "Pay_Period", "Overtime_Rate", "Name"});
+        tableModel.setColumnIdentifiers(new String[]{"PayGroup ID", "Pay Rate", "Pay Frequency", "Pay Period", "Overtime Rate", "Name"});
         tableModel.setRowCount(0);
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "SELECT PayGroup_ID, Pay_Rate, Pay_Frequency, Pay_Period, Overtime_Rate, Name FROM PAY_GROUP";

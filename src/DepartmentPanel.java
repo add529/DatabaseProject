@@ -32,24 +32,29 @@ public class DepartmentPanel extends JPanel {
                 //Navigation Bar Button Creation
                 selectBtn = new JButton("Select"); //Instantiate Select Button
                 JButton showAllBtn = new JButton("Show All"); //Instantiate Show All Button
-                JButton showDeptEmpl = new JButton("Employees"); //Instantiate Employees Button
+                JButton showDeptEmpl = new JButton("Employees");
+        
         
                 //Navigation Bar Button Formatting
                 for (JButton btn : new JButton[]{showDeptEmpl, selectBtn, showAllBtn}) {
                     btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+                    btn.setPreferredSize(new Dimension(120, 40));
+                    btn.setMinimumSize(new Dimension(120, 40));
                     btn.setMaximumSize(new Dimension(120, 40));
                     btn.setBackground(DARK_BG);
                     btn.setForeground(Color.WHITE);
                     btn.setFocusPainted(false);
                 }
-                
+        
                 //Add Navigation Buttons to Navigation Bar
-                navBar.add(selectBtn);  //Add Button
+                navBar.add(selectBtn);
                 navBar.add(Box.createVerticalStrut(10)); //Spacing
                 navBar.add(showAllBtn);
                 navBar.add(Box.createVerticalStrut(10));
                 navBar.add(showDeptEmpl);
-            
+                navBar.add(Box.createVerticalStrut(10));
+        
+        
                 //Add Navigation Bar to Panel
                 add(navBar, BorderLayout.WEST);
         
@@ -77,10 +82,10 @@ public class DepartmentPanel extends JPanel {
                 searchPanel.setOpaque(false);
                 mainContent.add(searchPanel, BorderLayout.NORTH);
         
-                // === TABLE FORMATTING ===
         
+                // === TABLE FORMATTING ===
                 tableModel = new DefaultTableModel(new String[]{
-                    "Department ID", "Name", "Budget", "Employee Count", "Dept. Head SSN", "Dept. Head Bonus"
+                    "Department ID", "Name", "Budget", "Employee Count", "Head SSN", "Head Bonus"
                 }, 0);
                 table = new JTable(tableModel);
                 table.setBackground(Color.WHITE);
@@ -105,19 +110,31 @@ public class DepartmentPanel extends JPanel {
         
                 // === BOTTOM PANEL AND INPUTS ===
         
-                JPanel inputPanel = new JPanel(); //Instantiate new panel
-        
+                JPanel inputPanel = new JPanel(); // Instantiate new panel
                 inputPanel.setBackground(BOT_GRADIENT);
-                inputPanel.setPreferredSize(new Dimension(0, 80));
-                inputPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
+                inputPanel.setPreferredSize(new Dimension(0, 80)); // Increased height for space
+                inputPanel.setLayout(new BorderLayout(10, 10)); // Use BorderLayout for better positioning
         
-                JButton addBtn = new JButton("Add Department");
+                // Create a panel for buttons
+                JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+                buttonPanel.setOpaque(false);
         
+                // Create buttons
+                JButton addBtn = new JButton("Add Department"); // Instantiate Add Button
                 addBtn.setBackground(DARK_BG);
                 addBtn.setForeground(Color.WHITE);
+            
+                // Add buttons to the button panel
+                buttonPanel.add(addBtn);
         
-                inputPanel.add(addBtn);
+                // Add panels to the input panel
+                inputPanel.add(buttonPanel, BorderLayout.NORTH); // Buttons at the top
+            
         
+                // Add action listeners
+                selectBtn.addActionListener(e -> openEditDialog());
+        
+                // Add the input panel to the bottom of the table wrapper
                 tableWrapper.add(inputPanel, BorderLayout.SOUTH);
         
                 mainContent.add(tableWrapper, BorderLayout.CENTER);
@@ -126,10 +143,9 @@ public class DepartmentPanel extends JPanel {
                 // === ACTION LISTENERS - These say what happens when button is pressed ===
         
                 searchBtn.addActionListener(e -> searchDept());
-                showDeptEmpl.addActionListener(e -> showEmpWithDept());
                 showAllBtn.addActionListener(e -> loadAllDepts());
-                selectBtn.addActionListener(e -> openEditDialog());
                 addBtn.addActionListener(e -> openCreationWizard());
+                showDeptEmpl.addActionListener(e -> showEmpWithDept());
         
                 // === INITIAL LOAD OF TABLE ===
         
@@ -192,7 +208,7 @@ public class DepartmentPanel extends JPanel {
         wizard.setLocationRelativeTo(this);
         wizard.setLayout(new BorderLayout(10, 10)); // Add padding around the dialog
 
-        // Fields for the product
+        // Fields for the department
         String[] fieldNames = {"Name", "Budget", "Employee Count", "Department Head SSN", "Department Head Bonus"};
         JTextField[] wizardFields = new JTextField[fieldNames.length];
 
@@ -211,7 +227,7 @@ public class DepartmentPanel extends JPanel {
         JButton finishButton = new JButton("Finish");
         finishButton.addActionListener(e -> {
             try (Connection conn = DatabaseConnection.getConnection()) {
-                // Generate a unique Product_ID
+                // Generate a unique departmentid
                 String departmentId = "D-";
                 String countQuery = "SELECT COUNT(*) AS Total FROM DEPARTMENT";
                 ResultSet rs = conn.createStatement().executeQuery(countQuery);
@@ -224,7 +240,7 @@ public class DepartmentPanel extends JPanel {
                 String sql = "INSERT INTO DEPARTMENT (Department_ID, Name, Budget, Employee_Count, Dep_Head_SSN, Dep_Head_Bonus) VALUES (?, ?, ?, ?, ?, ?)";
                 PreparedStatement ps = conn.prepareStatement(sql);
 
-                // Set Product_ID
+                // Set departmentid
                 ps.setString(1, departmentId);
 
                 // Set other fields
@@ -287,7 +303,7 @@ public class DepartmentPanel extends JPanel {
         
             private void loadAllDepts() { 
         
-                tableModel.setColumnIdentifiers(new String[]{"Department_ID", "Name", "Budget", "Employee_Count", "Dep_Head_SSN", "Dep_Head_Bonus"});
+                tableModel.setColumnIdentifiers(new String[]{"Dept. ID", "Name", "Budget", "Employee Count", "Head SSN", "Head Bonus"});
                 tableModel.setRowCount(0);
                 try (Connection conn = DatabaseConnection.getConnection()) {
                     String sql = "SELECT Department_ID, Name, Budget, Employee_Count, Dep_Head_SSN, Dep_Head_Bonus FROM DEPARTMENT";
