@@ -1,7 +1,7 @@
 // Class that launches the GUI application
 public class MainApp {
     public static void launch() {
-        MainFrame form = new MainFrame();
+        LoginFrame form = new LoginFrame();
         form.setVisible(true);
     }
 

@@ -35,6 +35,15 @@ public class MainFrame extends JFrame {
         
         add(toolBar, BorderLayout.NORTH);
 
+        // ===== Add Logout Button to the right side of the toolbar =====
+        JButton logoutBtn = new JButton("Logout");
+        logoutBtn.setFocusable(false);  // Remove focus highlight when clicked
+        logoutBtn.addActionListener(e -> logout());  // Logout functionality
+        toolBar.add(Box.createHorizontalGlue());  // Push the logout button to the far right
+        toolBar.add(logoutBtn);
+ 
+        add(toolBar, BorderLayout.NORTH);
+
         // ===== CardLayout Panel =====
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
@@ -64,5 +73,16 @@ public class MainFrame extends JFrame {
         assetsBtn.addActionListener(e -> cardLayout.show(contentPanel, "asset"));
         officeBtn.addActionListener(e -> cardLayout.show(contentPanel, "office"));
         employeeTypeBtn.addActionListener(e -> cardLayout.show(contentPanel, "employee type"));
+    }
+
+    // Logout function
+    private void logout() {
+        // Dispose of the current MainFrame window
+        this.dispose();
+
+        // Open the login window
+        SwingUtilities.invokeLater(() -> {
+            new LoginFrame().setVisible(true);  // Show LoginFrame
+        });
     }
 }
