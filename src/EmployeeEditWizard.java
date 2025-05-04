@@ -1,10 +1,9 @@
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import javax.swing.*;
 
 public class EmployeeEditWizard extends JDialog {
 
@@ -62,13 +61,26 @@ public class EmployeeEditWizard extends JDialog {
     private final Map<String, String> employeeTypeToPayGroupMap = new HashMap<>();
 
     private final String employeeId;
+    private final EmployeeUpdateListener updateListener;
 
-    public EmployeeEditWizard(JFrame parent, String employeeId) {
+    public EmployeeEditWizard(JFrame parent, String employeeId, EmployeeUpdateListener updateListener) {
         super(parent, "Edit Employee", true);
         this.employeeId = employeeId;
+        this.updateListener = updateListener;
+
         setSize(600, 500);
         setLocationRelativeTo(parent);
         setLayout(new BorderLayout(10, 10));
+
+        // Add a WindowListener to invoke the callback when the dialog is closed
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                if (updateListener != null) {
+                    updateListener.onEmployeeDataUpdated();
+                }
+            }
+        });
 
         // Load dropdown data
         loadDropdownData();
@@ -224,12 +236,12 @@ public class EmployeeEditWizard extends JDialog {
             cardLayout.next(cardPanel);
             if (currentPage[0] < 4)
                 pageCounter.setText("Page " + (currentPage[0] + 1) + " of " + totalPages);
-            else 
+            else
                 currentPage[0] = 0;
                 pageCounter.setText("Page " + (currentPage[0] + 1) + " of " + totalPages);
             backButton.setEnabled(true);
         });
-        
+
         JButton updateButton = new JButton("Update");
         JButton deleteButton = new JButton("Delete");
 
@@ -254,7 +266,7 @@ public class EmployeeEditWizard extends JDialog {
 
         loadEmployeeData();
 }
-    
+
 
     private void loadDropdownData() {
         try (Connection conn = DatabaseConnection.getConnection()) {
@@ -265,19 +277,19 @@ public class EmployeeEditWizard extends JDialog {
             departmentDropdown.removeAllItems();  // Clear existing items
             departmentNameToIdMap.clear();  // Reset department map
             departmentToProductsMap.clear();  // Reset department to product map
-    
+
             while (rsDepartment.next()) {
                 String departmentName = rsDepartment.getString("Name");
                 String departmentId = rsDepartment.getString("Department_ID");
                 departmentDropdown.addItem(departmentName);
                 departmentNameToIdMap.put(departmentName, departmentId);
-    
+
                 // Load products for each department
                 String productQuery = "SELECT Name FROM PRODUCT WHERE Department_ID = ?";
                 PreparedStatement psProduct = conn.prepareStatement(productQuery);
                 psProduct.setString(1, departmentId);
                 ResultSet rsProduct = psProduct.executeQuery();
-                
+
                 // Store the products for the current department
                 java.util.List<String> products = new ArrayList<>();
                 while (rsProduct.next()) {
@@ -285,7 +297,7 @@ public class EmployeeEditWizard extends JDialog {
                 }
                 departmentToProductsMap.put(departmentName, products);
             }
-    
+
             // Load office names into office dropdown
             String officeQuery = "SELECT Name, Office_ID FROM OFFICE";
             PreparedStatement psOffice = conn.prepareStatement(officeQuery);
@@ -298,7 +310,7 @@ public class EmployeeEditWizard extends JDialog {
                 officeDropdown.addItem(officeName);
                 officeNameToIdMap.put(officeName, officeId);
             }
-    
+
             // Load employee types into employee type dropdown
             String employeeTypeQuery = "SELECT Name, Employee_Type_ID FROM EMPLOYEE_TYPE";
             PreparedStatement psEmployeeType = conn.prepareStatement(employeeTypeQuery);
@@ -311,7 +323,7 @@ public class EmployeeEditWizard extends JDialog {
                 employeeTypeDropdown.addItem(employeeTypeName);
                 employeeTypeNameToIdMap.put(employeeTypeName, employeeTypeId);
             }
-    
+
             // Load product names into product dropdown
             String productQuery = "SELECT Name, Product_ID FROM PRODUCT";
             PreparedStatement psProduct = conn.prepareStatement(productQuery);
@@ -324,21 +336,21 @@ public class EmployeeEditWizard extends JDialog {
                 productDropdown.addItem(productName);
                 productNameToIdMap.put(productName, productId);
             }
-    
+
         } catch (SQLException | ClassNotFoundException ex) {
             JOptionPane.showMessageDialog(this, "Error loading dropdown data: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
-    
-    
+
+
+
     private void loadEmployeeData() {
         try (Connection conn = DatabaseConnection.getConnection()) {
             String query = "SELECT * FROM EMPLOYEE WHERE Employee_No = ?";
             PreparedStatement ps = conn.prepareStatement(query);
             ps.setString(1, employeeId);
             ResultSet rs = ps.executeQuery();
-    
+
             if (rs.next()) {
                 // Pre-fill fields
                 for (int i = 0; i < fieldNames.length; i++) {
@@ -348,10 +360,10 @@ public class EmployeeEditWizard extends JDialog {
                         wizardFields[i].setText(value);
                     }
                 }
-    
+
                 // Pre-select options for dropdowns, checkboxes, etc.
                 sexDropdown.setSelectedItem(rs.getString("Sex"));
-    
+
                 // Pre-select department by ID if the dropdown is populated
                 String departmentId = rs.getString("Department_ID");
                 if (departmentDropdown.getItemCount() > 0) {
@@ -369,7 +381,7 @@ public class EmployeeEditWizard extends JDialog {
                         updateProductDropdown(departmentDropdown.getSelectedItem().toString()); // Update products for the default department
                     }
                 }
-    
+
                 // Pre-select employee type by ID if the dropdown is populated
                 String employeeTypeId = rs.getString("Employee_Type");
                 if (employeeTypeDropdown.getItemCount() > 0) {
@@ -383,7 +395,7 @@ public class EmployeeEditWizard extends JDialog {
                         employeeTypeDropdown.setSelectedIndex(0); // Default to first item if no match found
                     }
                 }
-    
+
                 // Pre-select product by ID if the dropdown is populated
                 String productId = rs.getString("Product_ID");
                 if (productDropdown.getItemCount() > 0) {
@@ -397,7 +409,7 @@ public class EmployeeEditWizard extends JDialog {
                         productDropdown.setSelectedIndex(0); // Default to first item if no match found
                     }
                 }
-    
+
                 // Pre-select office by ID if the dropdown is populated
                 String officeId = rs.getString("Office_ID");
                 if (officeDropdown.getItemCount() > 0) {
@@ -411,14 +423,14 @@ public class EmployeeEditWizard extends JDialog {
                         officeDropdown.setSelectedIndex(0); // Default to first item if no match found
                     }
                 }
-    
+
                 // Marital and disability options
                 if ("Single".equals(rs.getString("Marital_Status"))) {
                     maritalNo.setSelected(true);
                 } else {
                     maritalYes.setSelected(true);
                 }
-    
+
                 if ("Disabled".equals(rs.getString("Disability_Status"))) {
                     disabilityYes.setSelected(true);
                 } else {
@@ -429,16 +441,16 @@ public class EmployeeEditWizard extends JDialog {
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
-    
+
+
     private void updateProductDropdown(String selectedDepartment) {
         java.util.List<String> products = departmentToProductsMap.getOrDefault(selectedDepartment, new ArrayList<>());
         productDropdown.removeAllItems(); // Clear existing items
         for (String product : products) {
             productDropdown.addItem(product); // Add products for the selected department
         }
-    }    
-    
+    }
+
 
     private void updateEmployee() {
         try (Connection conn = DatabaseConnection.getConnection()) {
@@ -447,10 +459,10 @@ public class EmployeeEditWizard extends JDialog {
                 sql.append(f).append(" = ?, ");
             }
             sql.append("Pay_Group = ? WHERE Employee_No = ?");
-    
+
             PreparedStatement ps = conn.prepareStatement(sql.toString());
             int idx = 1;
-    
+
             for (int i = 0; i < fieldNames.length; i++) {
                 switch (fieldNames[i]) {
                     case "Sex":
@@ -488,14 +500,14 @@ public class EmployeeEditWizard extends JDialog {
                         break;
                 }
             }
-    
-            
+
+
             String empTypeId = employeeTypeNameToIdMap.get((String) employeeTypeDropdown.getSelectedItem());
             String payGroupId = employeeTypeToPayGroupMap.get(empTypeId);
             ps.setString(idx++, payGroupId); // Pay_Group
-            
+
             ps.setString(idx++, employeeId); // WHERE clause: Employee_No
-    
+
             int updated = ps.executeUpdate();
             if (updated > 0) {
                 JOptionPane.showMessageDialog(this, "Employee updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
@@ -509,18 +521,18 @@ public class EmployeeEditWizard extends JDialog {
             JOptionPane.showMessageDialog(this, "Error updating employee: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+
     private void deleteEmployee() {
         int confirm = JOptionPane.showConfirmDialog(this,
                 "Are you sure you want to delete this employee?",
                 "Confirm Deletion", JOptionPane.YES_NO_OPTION);
-    
+
         if (confirm == JOptionPane.YES_OPTION) {
             try (Connection conn = DatabaseConnection.getConnection()) {
                 String sql = "DELETE FROM EMPLOYEE WHERE Employee_No = ?";
                 PreparedStatement ps = conn.prepareStatement(sql);
                 ps.setString(1, employeeId);
-    
+
                 int deleted = ps.executeUpdate();
                 if (deleted > 0) {
                     JOptionPane.showMessageDialog(this, "Employee deleted successfully.", "Deleted", JOptionPane.INFORMATION_MESSAGE);
@@ -531,10 +543,10 @@ public class EmployeeEditWizard extends JDialog {
             } catch (SQLException | ClassNotFoundException ex) {
                 JOptionPane.showMessageDialog(this, "Error deleting employee: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
-            
+
             loadEmployeeData();
         }
     }
-    
+
 
 }
