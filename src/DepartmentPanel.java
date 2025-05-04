@@ -387,7 +387,7 @@ public class DepartmentPanel extends JPanel {
                     String fullDeptID = rs.getString("Department_ID");
             
                     // === Build Modal Dialog ===
-                    JTextField idField = new JTextField(fullDeptID);
+                    JLabel idField = new JLabel(fullDeptID);
                     JTextField nameField = new JTextField(name);
                     JTextField budgetField = new JTextField(budget);
                     JTextField empField = new JTextField(emp_count);
@@ -411,7 +411,6 @@ public class DepartmentPanel extends JPanel {
                         // Update
                         updateDepartment(
                             fullDeptID,
-                            idField.getText().trim(),
                             nameField.getText().trim(),
                             budgetField.getText().trim(),
                             empField.getText().trim(),
@@ -431,11 +430,10 @@ public class DepartmentPanel extends JPanel {
         
             // === CALLED WHEN EDIT SAVED PRESSED IN MODAL ===
         
-            private void updateDepartment(String originalId, String newId, String name, String budget, String empCount, String headSSN, String headBonus) {
+            private void updateDepartment(String originalId, String name, String budget, String empCount, String headSSN, String headBonus) {
                 try (Connection conn = DatabaseConnection.getConnection()) {
                     String sql = "UPDATE DEPARTMENT SET Department_ID=?, Department_ID=?, Name=?, Description=?, Status=?, Version=? WHERE Department_ID=?";
                     PreparedStatement stmt = conn.prepareStatement(sql);
-                    stmt.setString(1, newId);
                     stmt.setString(2, name);
                     stmt.setString(3, budget);
                     stmt.setString(4, empCount);

@@ -424,7 +424,7 @@ public class PayPanel extends JPanel {
             String fullPGID = rs.getString("PayGroup_ID");
     
             // === Build Modal Dialog ===
-            JTextField idField = new JTextField(fullPGID);
+            JLabel idField = new JLabel(fullPGID);
             JTextField rateField = new JTextField(payRate);
             JTextField freqField = new JTextField(payFreq);
             JTextField periodField = new JTextField(payPer);
@@ -448,7 +448,6 @@ public class PayPanel extends JPanel {
                 // Update
                 updatePayGroup(
                     fullPGID,
-                    idField.getText().trim(),
                     rateField.getText().trim(),
                     freqField.getText().trim(),
                     periodField.getText().trim(),
@@ -468,11 +467,10 @@ public class PayPanel extends JPanel {
 
     // === CALLED WHEN EDIT SAVED PRESSED IN MODAL ===
 
-    private void updatePayGroup(String originalId, String newId, String pay_rate, String pay_freq, String pay_per, String overtime, String name) {
+    private void updatePayGroup(String originalId, String pay_rate, String pay_freq, String pay_per, String overtime, String name) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "UPDATE PAY_GROUP SET PayGroup_ID=?, Pay_Rate=?, Pay_Frequency=?, Pay_Period=?, Overtime_Rate=?, Name=? WHERE PayGroup_ID=?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, newId);
             stmt.setString(2, pay_rate);
             stmt.setString(3, pay_freq);
             stmt.setString(4, pay_per);

@@ -419,7 +419,7 @@ public class Assets extends JPanel {
             String warrantD = rs.getString("Warrant_Exp_Date");
     
             // === Build Modal Dialog ===
-            JTextField idField = new JTextField(fullaID);
+            JLabel idField = new JLabel(fullaID);
             JTextField serialField = new JTextField(sNo);
             JTextField typeField = new JTextField(type);
             JTextField condField = new JTextField(cond);
@@ -445,7 +445,6 @@ public class Assets extends JPanel {
                 // Update
                 updateAsset(
                     fullaID,
-                    idField.getText().trim(),
                     serialField.getText().trim(),
                     typeField.getText().trim(),
                     brandField.getText().trim(),
@@ -465,11 +464,10 @@ public class Assets extends JPanel {
 
     // === CALLED WHEN EDIT SAVED PRESSED IN MODAL ===
 
-    private void updateAsset(String originalId, String newId, String serial_no, String type, String brand, String purchase, String warranty) {
+    private void updateAsset(String originalId, String serial_no, String type, String brand, String purchase, String warranty) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "UPDATE ASSET SET Asset_ID=?, Serial_No=?, Type=?, brand_model=?, Purchase_Date=?, Warrant_Exp_Date=? WHERE Asset_ID=?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, newId);
             stmt.setString(2, serial_no);
             stmt.setString(3, type);
             stmt.setString(4, brand);

@@ -351,7 +351,7 @@ public class ProductPanel extends JPanel {
             String deptId = rs.getString("Department_ID");
     
             // === Build Modal Dialog ===
-            JTextField idField = new JTextField(fullProductId);
+            JLabel idField = new JLabel(fullProductId);
             JTextField deptField = new JTextField(deptId);
             JTextField nameField = new JTextField(name);
             JTextField descField = new JTextField(desc);
@@ -375,7 +375,6 @@ public class ProductPanel extends JPanel {
                 // Update
                 updateProduct(
                     fullProductId,
-                    idField.getText().trim(),
                     deptField.getText().trim(),
                     nameField.getText().trim(),
                     descField.getText().trim(),
@@ -395,11 +394,10 @@ public class ProductPanel extends JPanel {
 
     // === CALLED WHEN EDIT SAVED PRESSED IN MODAL ===
 
-    private void updateProduct(String originalId, String newId, String deptId, String name, String desc, String status, String version) {
+    private void updateProduct(String originalId, String deptId, String name, String desc, String status, String version) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "UPDATE PRODUCT SET Product_ID=?, Department_ID=?, Name=?, Description=?, Status=?, Version=? WHERE Product_ID=?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, newId);
             stmt.setString(2, deptId);
             stmt.setString(3, name);
             stmt.setString(4, desc);
