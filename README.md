@@ -7,10 +7,7 @@
 - Make Presentation
 
 ## Tasks for Software
-- Fix pay group
-- Fix products
-- Tweak employee creation wizard
-- Product ID doesn't display
+- DONE!!!
 
 ---
 
@@ -84,6 +81,3 @@ There are two methods to run the project. It is our recommendation that this pro
 
 The username and password to logging into the management software are username:**USER** and password:**password**
 
-This project can also be found on GitHub at:
-
-    (https://github.com/add529/DatabaseProject)
