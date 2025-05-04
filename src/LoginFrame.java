@@ -49,6 +49,7 @@ public class LoginFrame extends JFrame {
                 BorderFactory.createEmptyBorder(30, 30, 30, 30)
         ));
         formPanel.setPreferredSize(new Dimension(400, 400)); // increased height of white rectangle
+        formPanel.setMaximumSize(new Dimension(400, 400)); // increased height of white rectangle
         formPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Add the input components to the form panel
