@@ -322,16 +322,23 @@ public class EmployeeCreationWizard extends JDialog {
 
     private void saveEmployee() {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String maxIdQuery = "SELECT MAX(CAST(SUBSTRING(Employee_No, 4) AS UNSIGNED)) AS MaxID FROM EMPLOYEE";
+            // Only consider properly formatted employee numbers like 'Emp-001', 'Emp-123', etc.
+            String maxIdQuery = """
+                SELECT MAX(CAST(SUBSTRING_INDEX(Employee_No, '-', -1) AS UNSIGNED)) AS MaxID 
+                FROM EMPLOYEE 
+                WHERE Employee_No REGEXP '^Emp-[0-9]+$'
+            """;
+        
             ResultSet maxIdResult = conn.createStatement().executeQuery(maxIdQuery);
             String employeeNo = "Emp-";
-            
+        
             if (maxIdResult.next()) {
                 int maxId = maxIdResult.getInt("MaxID");
-                employeeNo += String.format("%03d", maxId + 1);  // Increment the maximum ID and format
+                employeeNo += String.format("%03d", maxId + 1);  // Format: Emp-001, Emp-002, etc.
             } else {
-                employeeNo += "001";  // Start from 001 if no records exist
+                employeeNo += "001";  // Start from Emp-001 if table is empty or no matches
             }
+            
 
             StringBuilder sql = new StringBuilder("INSERT INTO EMPLOYEE (");
             for (String f : fieldNames) {
