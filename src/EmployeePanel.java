@@ -49,6 +49,8 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
         //Navigation Bar Button Formatting
         for (JButton btn : new JButton[]{showEmpSuper, showEmpLoc, showPII, showEmpAssets, selectBtn, showAllBtn}) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+            btn.setPreferredSize(new Dimension(120, 40));
+            btn.setMinimumSize(new Dimension(120, 40));
             btn.setMaximumSize(new Dimension(120, 40));
             btn.setBackground(DARK_BG);
             btn.setForeground(Color.WHITE);

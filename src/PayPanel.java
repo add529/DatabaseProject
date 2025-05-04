@@ -14,16 +14,6 @@ public class PayPanel extends JPanel {
     private final Color TOP_GRADIENT = new Color (0x9ed7cf);
     private final Color BOT_GRADIENT = new Color (0xd0e8bd);
 
-    private String[] fieldNames = {
-        "PayGroup_ID", "SSN", "FName", "MName", "LName", "DOB", "Address", "Sex",
-        "Nationality", "Ethnic_ID", "Marital_Status", "Disability_Status", "Location",
-        "Status", "Cost_Center", "Seniority", "Job_Code", "Job_Desc", "Last_Hired",
-        "SuperSSN", "Product_ID", "Department_ID", "Employee_Type", "Pay_Group", "Office_ID"
-    };
-
-    private JTextField payRateField, payFrequencyField, payPeriodField, overtimeRateField, nameField;
-    private JButton editBtn, saveBtn;
-
     public PayPanel() {
 
         setLayout(new BorderLayout());
@@ -41,12 +31,15 @@ public class PayPanel extends JPanel {
         //Navigation Bar Button Creation
         selectBtn = new JButton("Select"); //Instantiate Select Button
         JButton showAllBtn = new JButton("Show All"); //Instantiate Show All Button
-        JButton showEmpPay = new JButton("Type and Pay"); //Instantiate Type and Pay Button
+        JButton showEmpPay = new JButton("Employees"); //Instantiate Type and Pay Button
+        JButton showPayET = new JButton("Type and Pay"); //Instantiate Type and Pay Button
 
 
         //Navigation Bar Button Formatting
-        for (JButton btn : new JButton[]{showEmpPay, selectBtn, showAllBtn}) {
+        for (JButton btn : new JButton[]{showPayET, showEmpPay, selectBtn, showAllBtn}) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+            btn.setPreferredSize(new Dimension(120, 40));
+            btn.setMinimumSize(new Dimension(120, 40));
             btn.setMaximumSize(new Dimension(120, 40));
             btn.setBackground(DARK_BG);
             btn.setForeground(Color.WHITE);
@@ -60,6 +53,8 @@ public class PayPanel extends JPanel {
         navBar.add(Box.createVerticalStrut(10));
         navBar.add(showEmpPay); // This can be changed to show Employlees in certain pay groups
         navBar.add(Box.createVerticalStrut(10));
+        navBar.add(showPayET);
+        navBar.add(Box.createVerticalStrut(10)); //Spacing
 
 
         //Add Navigation Bar to Panel
@@ -95,7 +90,7 @@ public class PayPanel extends JPanel {
         }, 0);
         table = new JTable(tableModel);
         table.setBackground(Color.WHITE);
-        table.setForeground(Color.GRAY);
+        table.setForeground(Color.BLACK);
         table.setFont(new Font("SansSerif", Font.PLAIN, 13));
         table.setRowHeight(24);
         table.getTableHeader().setBackground(DARK_BG);
@@ -118,7 +113,7 @@ public class PayPanel extends JPanel {
 
         JPanel inputPanel = new JPanel(); // Instantiate new panel
         inputPanel.setBackground(BOT_GRADIENT);
-        inputPanel.setPreferredSize(new Dimension(0, 160)); // Increased height for space
+        inputPanel.setPreferredSize(new Dimension(0, 80)); // Increased height for space
         inputPanel.setLayout(new BorderLayout(10, 10)); // Use BorderLayout for better positioning
 
         // Create a panel for buttons
@@ -126,103 +121,15 @@ public class PayPanel extends JPanel {
         buttonPanel.setOpaque(false);
 
         // Create buttons
-        JButton addBtn = new JButton("Add"); // Instantiate Add Button
-        editBtn = new JButton("Edit");
-        saveBtn = new JButton("Save");
-
-        // Style buttons to match Add Button
-        for (JButton btn : new JButton[]{addBtn, editBtn, saveBtn}) {
-            btn.setBackground(DARK_BG);
-            btn.setForeground(Color.WHITE);
-            btn.setFocusPainted(false);
-            btn.setPreferredSize(new Dimension(100, 30)); // Set uniform size
-        }
-
-        // Initially hide the Save button
-        saveBtn.setVisible(false);
+        JButton addBtn = new JButton("Add PayGroup"); // Instantiate Add Button
+        addBtn.setBackground(DARK_BG);
+        addBtn.setForeground(Color.WHITE);
 
         // Add buttons to the button panel
         buttonPanel.add(addBtn);
-        buttonPanel.add(editBtn);
-        buttonPanel.add(saveBtn);
-
-        // Initialize the text fields
-        payRateField = new JTextField(15);
-        payRateField.setPreferredSize(new Dimension(200, 500)); // Set height to 30 for better readability
-
-        payFrequencyField = new JTextField(15);
-        payFrequencyField.setPreferredSize(new Dimension(200, 30)); // Set height to 30 for better readability
-
-        payPeriodField = new JTextField(15);
-        payPeriodField.setPreferredSize(new Dimension(200, 30)); // Set height to 30 for better readability
-
-        overtimeRateField = new JTextField(15);
-        overtimeRateField.setPreferredSize(new Dimension(200, 30)); // Set height to 30 for better readability
-
-        nameField = new JTextField(15);
-        nameField.setPreferredSize(new Dimension(200, 30)); // Set height to 30 for better readability
-
-        // Create a panel for input fields and labels
-        JPanel fieldsPanel = new JPanel(new GridLayout(0, 2, 10, 10)); // Grid layout for labels and fields
-        fieldsPanel.setOpaque(false); // Make it transparent
-        fieldsPanel.setVisible(false); // Initially hidden
-
-        // Add fields and labels to the fields panel
-        fieldsPanel.add(new JLabel("Pay Rate:"));
-        fieldsPanel.add(payRateField);
-        fieldsPanel.add(new JLabel("Pay Frequency:"));
-        fieldsPanel.add(payFrequencyField);
-        fieldsPanel.add(new JLabel("Pay Period:"));
-        fieldsPanel.add(payPeriodField);
-        fieldsPanel.add(new JLabel("Overtime Rate:"));
-        fieldsPanel.add(overtimeRateField);
-        fieldsPanel.add(new JLabel("Name:"));
-        fieldsPanel.add(nameField);
-
-        // Add panels to the input panel
-        inputPanel.add(buttonPanel, BorderLayout.NORTH); // Buttons at the top
-        inputPanel.add(fieldsPanel, BorderLayout.CENTER); // Fields below the buttons
-
-        // Add action listeners
-        selectBtn.addActionListener(e -> {
-            int selectedRow = table.getSelectedRow();
-            if (selectedRow == -1) {
-                showError("Please select a row in the table first.");
-                return;
-            }
-
-            // Populate the input fields with the selected row's data
-            payRateField.setText((String) tableModel.getValueAt(selectedRow, 1));
-            payFrequencyField.setText((String) tableModel.getValueAt(selectedRow, 2));
-            payPeriodField.setText((String) tableModel.getValueAt(selectedRow, 3));
-            overtimeRateField.setText((String) tableModel.getValueAt(selectedRow, 4));
-            nameField.setText((String) tableModel.getValueAt(selectedRow, 5));
-
-            // Make the fields visible but not editable
-            fieldsPanel.setVisible(true);
-            payRateField.setEditable(false);
-            payFrequencyField.setEditable(false);
-            payPeriodField.setEditable(false);
-            overtimeRateField.setEditable(false);
-            nameField.setEditable(false);
-        });
-
-        editBtn.addActionListener(e -> {
-            fieldsPanel.setVisible(true); // Show fields and labels
-            payRateField.setEditable(true);
-            payFrequencyField.setEditable(true);
-            payPeriodField.setEditable(true);
-            overtimeRateField.setEditable(true);
-            nameField.setEditable(true);
-            saveBtn.setVisible(true); // Show the Save button
-        });
-
-        saveBtn.addActionListener(e -> {
-            updatePayGroup();
-            fieldsPanel.setVisible(false); // Hide fields and labels after saving
-            saveBtn.setVisible(false); // Hide the Save button after saving
-        });
-
+         // Add panels to the input panel
+         inputPanel.add(buttonPanel, BorderLayout.NORTH); // Buttons at the top
+       
         // Add the input panel to the bottom of the table wrapper
         tableWrapper.add(inputPanel, BorderLayout.SOUTH);
 
@@ -231,8 +138,10 @@ public class PayPanel extends JPanel {
 
         // === ACTION LISTENERS - These say what happens when button is pressed ===
 
-        searchBtn.addActionListener(e -> searchProduct());
-        showEmpPay.addActionListener(e -> standIn());
+        selectBtn.addActionListener(e -> openEditDialog());        
+        searchBtn.addActionListener(e -> searchPayGroup());
+        showEmpPay.addActionListener(e -> showEmpPay());
+        showPayET.addActionListener(e -> showPayET());
         showAllBtn.addActionListener(e -> loadAllPayGroups());
         addBtn.addActionListener(e -> openCreationWizard());
 
@@ -291,7 +200,7 @@ public class PayPanel extends JPanel {
 
     // === CALLED WHEN SEARCH BUTTON PRESSED, CONTROLS SEARCH PROCESS ===
 
-    private void searchProduct() {
+    private void searchPayGroup() {
         String payGroupNo = searchField.getText().trim();
         if (payGroupNo.isEmpty()) { //If nothing in search, error message shows
             showError("Please enter an Pay Group ID to search.");
@@ -323,11 +232,11 @@ public class PayPanel extends JPanel {
         padTableRows(35); // This keeps the empty rows there for design purposes
     }
 
-    // === CALLED WHEN SHOW ALL PRESSED, SHOWS PRODUCT DETAILS ===
+    // === CALLED WHEN SHOW ALL PRESSED, SHOWS PAY GROUP DETAILS ===
 
     private void loadAllPayGroups() {
 
-        tableModel.setColumnIdentifiers(new String[]{"PayGroup_ID", "Pay_Rate", "Pay_Frequency", "Pay_Period", "Overtime_Rate", "Name"});
+        tableModel.setColumnIdentifiers(new String[]{"PayGroup ID", "Pay Rate", "Pay Frequency", "Pay Period", "Overtime Rate", "Name"});
         tableModel.setRowCount(0);
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "SELECT PayGroup_ID, Pay_Rate, Pay_Frequency, Pay_Period, Overtime_Rate, Name FROM PAY_GROUP";
@@ -351,11 +260,73 @@ public class PayPanel extends JPanel {
         selectBtn.setEnabled(true); // Enable Select button
     }
 
-        // === CALLED WHEN DEPARTMENTS PRESSED, SHOWS PRODUCT TO DEPARTMENT DETAILS ===
-
-        private void standIn() {
-
+        private void showEmpPay() {
+            tableModel.setColumnIdentifiers(new String[]{"PayGroup ID", "Pay Rate", "Employee No", "First Name", "Last Name"});
+            tableModel.setRowCount(0);
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                String sql = """
+                    SELECT 
+                        p.PayGroup_ID, 
+                        p.Pay_Rate, 
+                        e.Employee_No, 
+                        e.FName, 
+                        e.LName
+                    FROM 
+                        PAY_GROUP p
+                    JOIN 
+                        EMPLOYEE e ON p.PayGroup_ID = e.Pay_Group
+                """;
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    tableModel.addRow(new Object[]{
+                        rs.getString("PayGroup_ID"),
+                        rs.getString("Pay_Rate"),
+                        rs.getString("Employee_No"),
+                        rs.getString("FName"),
+                        rs.getString("LName")
+                    });
+                }
+            } catch (Exception ex) {
+                showError("Error loading paygroup-employee data: " + ex.getMessage());
+            }
+            padTableRows(35);
+            selectBtn.setEnabled(false); // Disable Select button
         }
+    
+
+        private void showPayET() {
+            tableModel.setColumnIdentifiers(new String[]{"Pay Group ID", "Pay Group Name", "Employee Type ID", "Employee Type Name"});
+            tableModel.setRowCount(0);
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                String sql = """
+                            SELECT 
+                                p.PayGroup_ID, 
+                                p.Name AS "pgName", 
+                                e.Employee_Type_ID, 
+                                e.Name AS "etName"
+                            FROM 
+                                PAY_GROUP p
+                            JOIN 
+                                EMPLOYEE_TYPE e ON p.PayGroup_ID = e.PayGroup_ID
+                        """;
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    tableModel.addRow(new Object[]{
+                        rs.getString("PayGroup_ID"),
+                        rs.getString("pgName"),
+                        rs.getString("Employee_Type_ID"),
+                        rs.getString("etName")
+                    });
+                }
+            } catch (Exception ex) {
+                showError("Error loading employee type-pay group data: " + ex.getMessage());
+            }
+            padTableRows(35);
+            selectBtn.setEnabled(false); // Disable Select button
+        }
+    
 
 
     // === CALLED WHEN ADD BUTTON PRESSED, CONTROLS MODAL ===
@@ -366,142 +337,181 @@ public class PayPanel extends JPanel {
         wizard.setLocationRelativeTo(this);
         wizard.setLayout(new BorderLayout(10, 10)); // Add padding around the dialog
 
-        // ===== CardLayout for Multi-Page Wizard =====
-        JPanel cardPanel = new JPanel(new CardLayout(10, 10)); // Add padding between cards
-        CardLayout cardLayout = (CardLayout) cardPanel.getLayout();
+        // Fields for the pay group
+        String[] fieldNames = {"Pay Rate", "Pay Frequency", "Pay Period", "Overtime Rate", "Name"};
+        JTextField[] wizardFields = new JTextField[fieldNames.length];
 
-        // Page Counter
-        JLabel pageCounter = new JLabel("Page 1 of 1", JLabel.CENTER);
-        pageCounter.setFont(new Font("Tahoma", Font.BOLD, 14));
-
-        // Only include the specified fields
-        String[] visibleFields = {"Pay_Rate", "Pay_Frequency", "Pay_Period", "Overtime_Rate", "Name"};
-        JTextField[] wizardFields = new JTextField[visibleFields.length];
-
-        JPanel pagePanel = new JPanel(new GridLayout(0, 2, 10, 10)); // Add padding between fields
-        pagePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Add padding around the page
+        JPanel fieldsPanel = new JPanel(new GridLayout(0, 2, 10, 10)); // Add padding between fields
+        fieldsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Add padding around the panel
 
         // Add fields to the wizard
-        for (int i = 0; i < visibleFields.length; i++) {
-            String fieldName = visibleFields[i];
-            pagePanel.add(new JLabel(fieldName + ":"));
+        for (int i = 0; i < fieldNames.length; i++) {
+            String fieldName = fieldNames[i];
+            fieldsPanel.add(new JLabel(fieldName + ":"));
             JTextField field = new JTextField();
             wizardFields[i] = field;
-            pagePanel.add(field);
+            fieldsPanel.add(field);
         }
 
-        cardPanel.add(pagePanel, "Page1");
-
-        // ===== Navigation Buttons =====
-        JPanel buttonPanel = new JPanel(new BorderLayout(10, 10)); // Add padding around buttons
-        JPanel navButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         JButton finishButton = new JButton("Finish");
-
-        // Add action listener for the Finish button
         finishButton.addActionListener(e -> {
             try (Connection conn = DatabaseConnection.getConnection()) {
-                // Generate PayGroup_ID
-                String payGroupId = "PG-";
+                // Generate a unique Paygroup ID
+                String pgID = "PG-";
                 String countQuery = "SELECT COUNT(*) AS Total FROM PAY_GROUP";
                 ResultSet rs = conn.createStatement().executeQuery(countQuery);
                 if (rs.next()) {
                     int count = rs.getInt("Total") + 1;
-                    payGroupId += String.format("%03d", count); // Format as PG-XXX
+                    pgID += String.format("%03d", count); // Format as PG-XXX
                 }
 
                 // Build SQL query
                 String sql = "INSERT INTO PAY_GROUP (PayGroup_ID, Pay_Rate, Pay_Frequency, Pay_Period, Overtime_Rate, Name) VALUES (?, ?, ?, ?, ?, ?)";
                 PreparedStatement ps = conn.prepareStatement(sql);
 
-                // Set PayGroup_ID
-                ps.setString(1, payGroupId);
+                // Set PaygroupID
+                ps.setString(1, pgID);
 
-                // Set visible fields
-                for (int i = 0; i < visibleFields.length; i++) {
+                // Set other fields
+                for (int i = 0; i < fieldNames.length; i++) {
                     ps.setString(i + 2, wizardFields[i].getText());
                 }
 
                 int rows = ps.executeUpdate();
                 if (rows > 0) {
-                    JOptionPane.showMessageDialog(this, "Pay Group added successfully!");
+                    JOptionPane.showMessageDialog(this, "PayGroup added successfully!");
                     loadAllPayGroups(); // Refresh the table
                     wizard.dispose(); // Close the wizard
                 }
             } catch (Exception ex) {
-                showError("Error adding pay group: " + ex.getMessage());
+                showError("Error adding paygroup: " + ex.getMessage());
             }
         });
 
-        navButtons.add(finishButton);
-        buttonPanel.add(pageCounter, BorderLayout.NORTH); // Add page counter
-        buttonPanel.add(navButtons, BorderLayout.SOUTH);
-
-        // ===== Add Components to Wizard =====
-        wizard.add(cardPanel, BorderLayout.CENTER);
-        wizard.add(buttonPanel, BorderLayout.SOUTH);
+        wizard.add(fieldsPanel, BorderLayout.CENTER);
+        wizard.add(finishButton, BorderLayout.SOUTH);
         wizard.setVisible(true);
     }
 
-    // Enable editing when the "Edit" button is clicked
-    private void enableEditing() {
-        payFrequencyField.setVisible(true);
-        payRateField.setVisible(true);
-        payPeriodField.setVisible(true);
-        overtimeRateField.setVisible(true);
-        nameField.setVisible(true);
+    // === CALLED WHEN SELECT BUTTON PRESSED, CONTROLS MODAL ===
 
-        payRateField.setEditable(true);
-        payFrequencyField.setEditable(true);
-        payPeriodField.setEditable(true);
-        overtimeRateField.setEditable(true);
-        nameField.setEditable(true);
-
-        saveBtn.setEnabled(true); // Enable the Update button
-    }
-
-    // Update the database when the "Update" button is clicked
-    private void updatePayGroup() {
+    private void openEditDialog() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow == -1) {
-            showError("Please select a Pay Group to update.");
+            showError("Please select a row to edit.");
             return;
         }
-
-        String payGroupId = (String) tableModel.getValueAt(selectedRow, 0); // Get PayGroup_ID from the table
-        String payRate = payRateField.getText();
-        String payFrequency = payFrequencyField.getText();
-        String payPeriod = payPeriodField.getText();
-        String overtimeRate = overtimeRateField.getText();
-        String name = nameField.getText();
-
+    
+        // Get visible values from table
+        String pgID = (String) tableModel.getValueAt(selectedRow, 0);
+        String payRate = (String) tableModel.getValueAt(selectedRow, 1);
+        String payFreq = (String) tableModel.getValueAt(selectedRow, 2);
+        String payPer = (String) tableModel.getValueAt(selectedRow, 3);
+        String overtime = (String) tableModel.getValueAt(selectedRow, 4);
+        String name = (String) tableModel.getValueAt(selectedRow, 5);
+    
+    
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "UPDATE PAY_GROUP SET Pay_Rate = ?, Pay_Frequency = ?, Pay_Period = ?, Overtime_Rate = ?, Name = ? WHERE PayGroup_ID = ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, payRate);
-            ps.setString(2, payFrequency);
-            ps.setString(3, payPeriod);
-            ps.setString(4, overtimeRate);
-            ps.setString(5, name);
-            ps.setString(6, payGroupId);
+            String sql = "SELECT * FROM PAY_GROUP WHERE PayGroup_ID = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, pgID);
+            ResultSet rs = stmt.executeQuery();
+            if (!rs.next()) {
+                showError("Could not retrieve full record.");
+                return;
+            }
+    
+            String fullPGID = rs.getString("PayGroup_ID");
+    
+            // === Build Modal Dialog ===
+            JTextField idField = new JTextField(fullPGID);
+            JTextField rateField = new JTextField(payRate);
+            JTextField freqField = new JTextField(payFreq);
+            JTextField periodField = new JTextField(payPer);
+            JTextField overtimeField = new JTextField(overtime);
+            JTextField nameField = new JTextField(name);
+    
+            JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
+            panel.add(new JLabel("Pay Group ID:")); panel.add(idField);
+            panel.add(new JLabel("Pay Rate:")); panel.add(rateField);
+            panel.add(new JLabel("Pay Frequency:")); panel.add(freqField);
+            panel.add(new JLabel("Pay Period:")); panel.add(periodField);
+            panel.add(new JLabel("Overtime Rate:")); panel.add(overtimeField);
+            panel.add(new JLabel("Name:")); panel.add(nameField);
+    
+            Object[] options = {"Update", "Delete", "Cancel"};
+            int result = JOptionPane.showOptionDialog(this, panel, "Edit PayGroup",
+                    JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
+                    null, options, options[0]);
+    
+            if (result == JOptionPane.YES_OPTION) {
+                // Update
+                updatePayGroup(
+                    fullPGID,
+                    idField.getText().trim(),
+                    rateField.getText().trim(),
+                    freqField.getText().trim(),
+                    periodField.getText().trim(),
+                    overtimeField.getText().trim(),
+                    nameField.getText().trim()
+                );
 
-            int rows = ps.executeUpdate();
+            } else if (result == JOptionPane.NO_OPTION) {
+                // Delete
+                deletePayGroup(fullPGID);
+            }
+    
+        } catch (Exception ex) {
+            showError("Error retrieving paygroup: " + ex.getMessage());
+        }
+    }
+
+    // === CALLED WHEN EDIT SAVED PRESSED IN MODAL ===
+
+    private void updatePayGroup(String originalId, String newId, String pay_rate, String pay_freq, String pay_per, String overtime, String name) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "UPDATE PAY_GROUP SET PayGroup_ID=?, Pay_Rate=?, Pay_Frequency=?, Pay_Period=?, Overtime_Rate=?, Name=? WHERE PayGroup_ID=?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, newId);
+            stmt.setString(2, pay_rate);
+            stmt.setString(3, pay_freq);
+            stmt.setString(4, pay_per);
+            stmt.setString(5, overtime);
+            stmt.setString(6, name);
+            stmt.setString(7, originalId);
+            int rows = stmt.executeUpdate();
             if (rows > 0) {
-                JOptionPane.showMessageDialog(this, "Pay Group updated successfully!");
-                loadAllPayGroups(); // Refresh the table
+                JOptionPane.showMessageDialog(this, "PayGroup updated successfully.");
+                loadAllPayGroups();
             } else {
-                showError("Failed to update Pay Group.");
+                showError("Update failed. PayGroup not found.");
             }
         } catch (Exception ex) {
-            showError("Error updating Pay Group: " + ex.getMessage());
+            showError("Error updating paygroup: " + ex.getMessage());
         }
-
-        // Disable editing after update
-        payRateField.setEditable(false);
-        payFrequencyField.setEditable(false);
-        payPeriodField.setEditable(false);
-        overtimeRateField.setEditable(false);
-        nameField.setEditable(false);
-
-        saveBtn.setEnabled(false); // Disable the Update button
     }
+    
+
+    // === CALLED WHEN DELETE BUTTON PRESSED IN MODAL ===
+
+    private void deletePayGroup(String pgID) {
+        int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this paygroup?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
+    
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "DELETE FROM PAY_GROUP WHERE PayGroup_ID=?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, pgID);
+            int rows = stmt.executeUpdate();
+            if (rows > 0) {
+                JOptionPane.showMessageDialog(this, "PayGroup deleted successfully.");
+                loadAllPayGroups();
+            } else {
+                showError("Delete failed. PayGroup not found.");
+            }
+        } catch (Exception ex) {
+            showError("Error deleting paygroup: " + ex.getMessage());
+        }
+    }
+
 }
