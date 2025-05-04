@@ -14,6 +14,14 @@ public class ProductPanel extends JPanel {
     private final Color TOP_GRADIENT = new Color (0x9ed7cf);
     private final Color BOT_GRADIENT = new Color (0xd0e8bd);
 
+    private String[] fieldNames = {
+        "PayGroup_ID", "SSN", "FName", "MName", "LName", "DOB", "Address", "Sex",
+        "Nationality", "Ethnic_ID", "Marital_Status", "Disability_Status", "Location",
+        "Status", "Cost_Center", "Seniority", "Job_Code", "Job_Desc", "Last_Hired",
+        "SuperSSN", "Product_ID", "Department_ID", "Employee_Type", "Pay_Group", "Office_ID"
+    };
+
+    private JTextField NameField, DescriptionField, statusField, versionField, nameField, productIdField, departmentIdField;
 
     public ProductPanel() {
 
@@ -32,26 +40,26 @@ public class ProductPanel extends JPanel {
         //Navigation Bar Button Creation
         selectBtn = new JButton("Select"); //Instantiate Select Button
         JButton showAllBtn = new JButton("Show All"); //Instantiate Show All Button
-        JButton showProdDept = new JButton("Departments"); //Instantiate Departments Button
-        JButton showProdEmpl = new JButton("Employees"); //Instantiate Employees Button
+        JButton showEmpPay = new JButton("Type and Pay"); //Instantiate Type and Pay Button
+
 
         //Navigation Bar Button Formatting
-        for (JButton btn : new JButton[]{showProdDept, showProdEmpl, selectBtn, showAllBtn}) {
+        for (JButton btn : new JButton[]{showEmpPay, selectBtn, showAllBtn}) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
             btn.setMaximumSize(new Dimension(120, 40));
             btn.setBackground(DARK_BG);
             btn.setForeground(Color.WHITE);
             btn.setFocusPainted(false);
         }
-        
+
         //Add Navigation Buttons to Navigation Bar
-        navBar.add(selectBtn);  //Add Button
+        navBar.add(selectBtn);
         navBar.add(Box.createVerticalStrut(10)); //Spacing
         navBar.add(showAllBtn);
         navBar.add(Box.createVerticalStrut(10));
-        navBar.add(showProdDept);
+        navBar.add(showEmpPay); // This can be changed to show Employlees in certain pay groups
         navBar.add(Box.createVerticalStrut(10));
-        navBar.add(showProdEmpl);
+
 
         //Add Navigation Bar to Panel
         add(navBar, BorderLayout.WEST);
@@ -68,7 +76,7 @@ public class ProductPanel extends JPanel {
         //Search Panel Button Formatting
         searchPanel.setBackground(new Color(230, 255, 245));
         searchField = new JTextField(20);
-        searchBtn = new JButton("Search Product By ID");
+        searchBtn = new JButton("Search Products By ID");
         searchBtn.setBackground(DARK_BG);
         searchBtn.setForeground(Color.WHITE);
 
@@ -80,10 +88,10 @@ public class ProductPanel extends JPanel {
         searchPanel.setOpaque(false);
         mainContent.add(searchPanel, BorderLayout.NORTH);
 
-        // === TABLE FORMATTING ===
 
+        // === TABLE FORMATTING ===
         tableModel = new DefaultTableModel(new String[]{
-            "Product ID", "Name", "Description", "Status", "Version"
+            "Product_ID", "Name", "Description", "Status", "Version", "Department_ID"
         }, 0);
         table = new JTable(tableModel);
         table.setBackground(Color.WHITE);
@@ -108,37 +116,60 @@ public class ProductPanel extends JPanel {
 
         // === BOTTOM PANEL AND INPUTS ===
 
-        JPanel inputPanel = new JPanel(); //Instantiate new panel
-
+        JPanel inputPanel = new JPanel(); // Instantiate new panel
         inputPanel.setBackground(BOT_GRADIENT);
-        inputPanel.setPreferredSize(new Dimension(0, 80));
-        inputPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        inputPanel.setPreferredSize(new Dimension(0, 80)); // Increased height for space
+        inputPanel.setLayout(new BorderLayout(10, 10)); // Use BorderLayout for better positioning
 
-        JTextField idField = new JTextField(5);
-        JTextField deptField = new JTextField(5);
-        JTextField nameField = new JTextField(10);
-        JTextField descField = new JTextField(10);
-        JTextField statusField = new JTextField(6);
-        JTextField versionField = new JTextField(6);
-        JButton addBtn = new JButton("Add Product");
+        // Create a panel for buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        buttonPanel.setOpaque(false);
 
+        // Create buttons
+        JButton addBtn = new JButton("Add Product"); // Instantiate Add Button
         addBtn.setBackground(DARK_BG);
         addBtn.setForeground(Color.WHITE);
+    
 
-        inputPanel.add(new JLabel("Product ID:"));
-        inputPanel.add(idField);
-        inputPanel.add(new JLabel("Dept ID:"));
-        inputPanel.add(deptField);
-        inputPanel.add(new JLabel("Name:"));
-        inputPanel.add(nameField);
-        inputPanel.add(new JLabel("Desc:"));
-        inputPanel.add(descField);
-        inputPanel.add(new JLabel("Status:"));
-        inputPanel.add(statusField);
-        inputPanel.add(new JLabel("Version:"));
-        inputPanel.add(versionField);
-        inputPanel.add(addBtn);
+        // Add buttons to the button panel
+        buttonPanel.add(addBtn);
 
+        // Initialize the text fields and assign them to class-level variables
+        productIdField = new JTextField(15);
+        NameField = new JTextField(15); // Assign to class-level variable
+        DescriptionField = new JTextField(15); // Assign to class-level variable
+        statusField = new JTextField(15); // Assign to class-level variable
+        versionField = new JTextField(15); // Assign to class-level variable
+        departmentIdField = new JTextField(15);
+        departmentIdField.setEditable(false); // Make Department_ID field non-editable
+
+        // Create a panel for input fields and labels
+        JPanel fieldsPanel = new JPanel(new GridLayout(0, 2, 10, 10)); // Grid layout for labels and fields
+        fieldsPanel.setOpaque(false); // Make it transparent
+        fieldsPanel.setVisible(false); // Initially hidden
+
+        // Add fields and labels to the fields panel
+        fieldsPanel.add(new JLabel("Product ID:"));
+        fieldsPanel.add(productIdField);
+        fieldsPanel.add(new JLabel("Name:"));
+        fieldsPanel.add(NameField);
+        fieldsPanel.add(new JLabel("Description:"));
+        fieldsPanel.add(DescriptionField);
+        fieldsPanel.add(new JLabel("Status:"));
+        fieldsPanel.add(statusField);
+        fieldsPanel.add(new JLabel("Version:"));
+        fieldsPanel.add(versionField);
+        fieldsPanel.add(new JLabel("Department ID:"));
+        fieldsPanel.add(departmentIdField);
+
+        // Add panels to the input panel
+        inputPanel.add(buttonPanel, BorderLayout.NORTH); // Buttons at the top
+        inputPanel.add(fieldsPanel, BorderLayout.CENTER); // Fields below the buttons
+
+        // Add action listeners
+        selectBtn.addActionListener(e -> openEditDialog());
+
+        // Add the input panel to the bottom of the table wrapper
         tableWrapper.add(inputPanel, BorderLayout.SOUTH);
 
         mainContent.add(tableWrapper, BorderLayout.CENTER);
@@ -147,42 +178,9 @@ public class ProductPanel extends JPanel {
         // === ACTION LISTENERS - These say what happens when button is pressed ===
 
         searchBtn.addActionListener(e -> searchProduct());
-        showProdDept.addActionListener(e -> showProductsWithDepartments());
-        showProdEmpl.addActionListener(e -> showProductsWithEmployees());
+        showEmpPay.addActionListener(e -> standIn());
         showAllBtn.addActionListener(e -> loadAllProducts());
-        selectBtn.addActionListener(e -> openEditDialog());
-        addBtn.addActionListener(e -> {
-            String id = idField.getText().trim();
-            String deptId = deptField.getText().trim();
-            String name = nameField.getText().trim();
-            String desc = descField.getText().trim();
-            String status = statusField.getText().trim();
-            String version = versionField.getText().trim();
-        
-            if (id.isEmpty() || deptId.isEmpty() || name.isEmpty() || desc.isEmpty() || status.isEmpty() || version.isEmpty()) {
-                showError("All fields must be filled to add a product.");
-                return;
-            }
-        
-            try (Connection conn = DatabaseConnection.getConnection()) {
-                String sql = "INSERT INTO PRODUCT (Product_ID, Department_ID, Name, Description, Status, Version) VALUES (?, ?, ?, ?, ?, ?)";
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                stmt.setString(1, id);
-                stmt.setString(2, deptId);
-                stmt.setString(3, name);
-                stmt.setString(4, desc);
-                stmt.setString(5, status);
-                stmt.setString(6, version);
-                stmt.executeUpdate();
-        
-                loadAllProducts(); // refresh table
-                idField.setText(""); deptField.setText(""); nameField.setText("");
-                descField.setText(""); statusField.setText(""); versionField.setText("");
-            } catch (Exception ex) {
-                showError("Error adding product: " + ex.getMessage());
-            }
-        });
-        
+        addBtn.addActionListener(e -> openCreationWizard());
 
         // === INITIAL LOAD OF TABLE ===
 
@@ -241,14 +239,14 @@ public class ProductPanel extends JPanel {
 
     private void searchProduct() {
         String productId = searchField.getText().trim();
-        if (productId.isEmpty()) { //If nothing in search, error message shows
-            showError("Please enter a Product ID to search."); 
+        if (productId.isEmpty()) {
+            showError("Please enter a Product ID to search.");
             return;
         }
 
         tableModel.setRowCount(0);
-        try (Connection conn = DatabaseConnection.getConnection()) { //SQL code and connection for finding row from ID
-            String sql = "SELECT Product_ID, Name, Description, Status, Version FROM PRODUCT WHERE Product_ID = ?";
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "SELECT Product_ID, Name, Description, Status, Version, Department_ID FROM PRODUCT WHERE Product_ID = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, productId);
             ResultSet rs = stmt.executeQuery();
@@ -258,26 +256,26 @@ public class ProductPanel extends JPanel {
                     rs.getString("Name"),
                     rs.getString("Description"),
                     rs.getString("Status"),
-                    rs.getString("Version")
+                    rs.getString("Version"),
+                    rs.getString("Department_ID")
                 });
             } else {
-                showError("No product found with Product ID: " + productId);
+                showError("No Product found with Product ID: " + productId);
             }
         } catch (Exception ex) {
-            showError("Error searching product: " + ex.getMessage());
+            showError("Error searching for Product: " + ex.getMessage());
         }
 
-        padTableRows(35); // This keeps the empty rows there for design purposes
+        padTableRows(35); // Keeps empty rows for design
     }
 
     // === CALLED WHEN SHOW ALL PRESSED, SHOWS PRODUCT DETAILS ===
 
-    private void loadAllProducts() { 
-
-        tableModel.setColumnIdentifiers(new String[]{"Product ID", "Name", "Description", "Status", "Version"});
+    private void loadAllProducts() {
+        tableModel.setColumnIdentifiers(new String[]{"Product_ID", "Name", "Description", "Status", "Version", "Department_ID"});
         tableModel.setRowCount(0);
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "SELECT Product_ID, Name, Description, Status, Version FROM PRODUCT";
+            String sql = "SELECT Product_ID, Name, Description, Status, Version, Department_ID FROM PRODUCT";
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -286,7 +284,8 @@ public class ProductPanel extends JPanel {
                     rs.getString("Name"),
                     rs.getString("Description"),
                     rs.getString("Status"),
-                    rs.getString("Version")
+                    rs.getString("Version"),
+                    rs.getString("Department_ID")
                 });
             }
         } catch (Exception ex) {
@@ -297,67 +296,142 @@ public class ProductPanel extends JPanel {
         selectBtn.setEnabled(true); // Enable Select button
     }
 
-        // === CALLED WHEN DEPARTMENTS PRESSED, SHOWS PRODUCT TO DEPARTMENT DETAILS ===
+    // === CALLED WHEN DEPARTMENTS PRESSED, SHOWS PRODUCT TO DEPARTMENT DETAILS ===
 
-        private void showProductsWithDepartments() {
-            tableModel.setColumnIdentifiers(new String[]{"Product ID", "Product Name", "Department ID", "Department Name"});
-            tableModel.setRowCount(0);
+    private void standIn() {
+
+    }
+
+    // === CALLED WHEN ADD BUTTON PRESSED, CONTROLS MODAL ===
+
+    private void openCreationWizard() {
+        JDialog wizard = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Add New Product", true);
+        wizard.setSize(500, 400);
+        wizard.setLocationRelativeTo(this);
+        wizard.setLayout(new BorderLayout(10, 10)); // Add padding around the dialog
+
+        // Fields for the product
+        String[] fieldNames = {"Name", "Description", "Status", "Version", "Department_ID"};
+        JTextField[] wizardFields = new JTextField[fieldNames.length];
+
+        JPanel fieldsPanel = new JPanel(new GridLayout(0, 2, 10, 10)); // Add padding between fields
+        fieldsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Add padding around the panel
+
+        // Add fields to the wizard
+        for (int i = 0; i < fieldNames.length; i++) {
+            String fieldName = fieldNames[i];
+            fieldsPanel.add(new JLabel(fieldName + ":"));
+            JTextField field = new JTextField();
+            wizardFields[i] = field;
+            fieldsPanel.add(field);
+        }
+
+        JButton finishButton = new JButton("Finish");
+        finishButton.addActionListener(e -> {
             try (Connection conn = DatabaseConnection.getConnection()) {
-                String sql = """
-                    SELECT p.Product_ID, p.Name, d.Department_ID, d.Name AS DeptName
-                    FROM PRODUCT p
-                    JOIN DEPARTMENT d ON p.Department_ID = d.Department_ID
-                    ORDER BY CAST(SUBSTRING(p.Product_ID, 4) AS UNSIGNED)
-                    """;
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    tableModel.addRow(new Object[]{
-                        rs.getString("Product_ID"),
-                        rs.getString("Name"),
-                        rs.getString("Department_ID"),
-                        rs.getString("DeptName")
-                    });
+                // Generate a unique Product_ID
+                String productId = "Pr-";
+                String countQuery = "SELECT COUNT(*) AS Total FROM PRODUCT";
+                ResultSet rs = conn.createStatement().executeQuery(countQuery);
+                if (rs.next()) {
+                    int count = rs.getInt("Total") + 1;
+                    productId += String.format("%03d", count); // Format as P-XXX
+                }
+
+                // Build SQL query
+                String sql = "INSERT INTO PRODUCT (Product_ID, Name, Description, Status, Version, Department_ID) VALUES (?, ?, ?, ?, ?, ?)";
+                PreparedStatement ps = conn.prepareStatement(sql);
+
+                // Set Product_ID
+                ps.setString(1, productId);
+
+                // Set other fields
+                for (int i = 0; i < fieldNames.length; i++) {
+                    ps.setString(i + 2, wizardFields[i].getText());
+                }
+
+                int rows = ps.executeUpdate();
+                if (rows > 0) {
+                    JOptionPane.showMessageDialog(this, "Product added successfully!");
+                    loadAllProducts(); // Refresh the table
+                    wizard.dispose(); // Close the wizard
                 }
             } catch (Exception ex) {
-                showError("Error loading product-department data: " + ex.getMessage());
+                showError("Error adding product: " + ex.getMessage());
             }
-            padTableRows(35);
-            selectBtn.setEnabled(false); // Disable Select button
-        }
-        
-        // === CALLED WHEN EMPLOYEES PRESSED, SHOWS PRODUCT TO EMPLOYEES DETAILS ===
-    
-        private void showProductsWithEmployees() {
-            tableModel.setColumnIdentifiers(new String[]{"Product ID", "Employee No", "First Name", "Last Name"});
-            tableModel.setRowCount(0);
-            try (Connection conn = DatabaseConnection.getConnection()) {
-                String sql = """
-                    SELECT p.Product_ID, e.Employee_No, e.FName, e.LName
-                    FROM PRODUCT p
-                    LEFT JOIN EMPLOYEE e ON p.Product_ID = e.Product_ID
-                    ORDER BY CAST(SUBSTRING(p.Product_ID, 4) AS UNSIGNED)
-                    """;
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    tableModel.addRow(new Object[]{
-                        rs.getString("Product_ID"),
-                        rs.getString("Employee_No"),
-                        rs.getString("FName"),
-                        rs.getString("LName")
-                    });
-                }
-            } catch (Exception ex) {
-                showError("Error loading product-employee data: " + ex.getMessage());
-            }
-            padTableRows(35);
-            selectBtn.setEnabled(false); // Disable Select button
-        }
-    
-    // === CALLED WHEN SELECT BUTTON PRESSED, CONTROLS MODAL ===
+        });
 
-    private void openEditDialog() {
+        wizard.add(fieldsPanel, BorderLayout.CENTER);
+        wizard.add(finishButton, BorderLayout.SOUTH);
+        wizard.setVisible(true);
+    }
+
+    // === Update the database when the "Update" button is clicked ===
+    private void updateProduct() {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow == -1) {
+            showError("Please select a Product to update.");
+            return;
+        }
+
+        // Get the original values from the table
+        String originalProductID = (String) tableModel.getValueAt(selectedRow, 0);
+        String originalName = (String) tableModel.getValueAt(selectedRow, 1);
+        String originalDescription = (String) tableModel.getValueAt(selectedRow, 2);
+        String originalStatus = (String) tableModel.getValueAt(selectedRow, 3);
+        String originalVersion = (String) tableModel.getValueAt(selectedRow, 4);
+        String originalDepartmentID = (String) tableModel.getValueAt(selectedRow, 5);
+
+        // Get the updated values from the input fields
+        String updatedName = NameField.getText();
+        String updatedDescription = DescriptionField.getText();
+        String updatedStatus = statusField.getText();
+        String updatedVersion = versionField.getText();
+        String updatedDepartmentID = nameField.getText(); // Assuming this is the Department_ID field
+
+        // Check if any changes were made
+        if (originalName.equals(updatedName) &&
+            originalDescription.equals(updatedDescription) &&
+            originalStatus.equals(updatedStatus) &&
+            originalVersion.equals(updatedVersion) &&
+            originalDepartmentID.equals(updatedDepartmentID)) {
+            showError("No changes made.");
+            return;
+        }
+
+        // Update the database
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "UPDATE PRODUCT SET Name = ?, Description = ?, Status = ?, Version = ?, Department_ID = ? WHERE Product_ID = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, updatedName);
+            ps.setString(2, updatedDescription);
+            ps.setString(3, updatedStatus);
+            ps.setString(4, updatedVersion);
+            ps.setString(5, updatedDepartmentID);
+            ps.setString(6, originalProductID);
+
+            int rows = ps.executeUpdate();
+            if (rows > 0) {
+                JOptionPane.showMessageDialog(this, "Product updated successfully!");
+                loadAllProducts(); // Refresh the table
+            } else {
+                showError("Failed to update Product.");
+            }
+        } catch (Exception ex) {
+            showError("Error updating Product: " + ex.getMessage());
+        }
+
+        // Disable editing after update
+        NameField.setEditable(false);
+        DescriptionField.setEditable(false);
+        statusField.setEditable(false);
+        versionField.setEditable(false);
+        nameField.setEditable(false);
+    }
+
+      // === CALLED WHEN SELECT BUTTON PRESSED, CONTROLS MODAL ===
+
+      private void openEditDialog() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow == -1) {
             showError("Please select a row to edit.");
@@ -475,5 +549,6 @@ public class ProductPanel extends JPanel {
             showError("Error deleting product: " + ex.getMessage());
         }
     }
+
 
 }
