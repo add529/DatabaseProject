@@ -1,10 +1,10 @@
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import javax.swing.*;
 
 public class EmployeeCreationWizard extends JDialog {
 
@@ -63,11 +63,25 @@ public class EmployeeCreationWizard extends JDialog {
     private final Map<String, String> employeeTypeNameToIdMap = new HashMap<>();
     private final Map<String, String> officeNameToIdMap = new HashMap<>();
 
-    public EmployeeCreationWizard(JFrame parent) {
+    private final EmployeeUpdateListener updateListener;
+
+    public EmployeeCreationWizard(JFrame parent, EmployeeUpdateListener updateListener) {
         super(parent, "Add New Employee", true);
+        this.updateListener = updateListener;
+
         setSize(600, 500);
         setLocationRelativeTo(parent);
         setLayout(new BorderLayout(10, 10));
+
+        // Add a WindowListener to invoke the callback when the dialog is closed
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                if (updateListener != null) {
+                    updateListener.onEmployeeDataUpdated();
+                }
+            }
+        });
 
         // Load dropdown data
         loadDropdownData();
@@ -75,7 +89,7 @@ public class EmployeeCreationWizard extends JDialog {
         JPanel cardPanel = new JPanel(new CardLayout(10, 10));
         cardPanel.setBackground(BACKGROUND_COLOR);
         CardLayout cardLayout = (CardLayout) cardPanel.getLayout();
-        
+
 
         int fieldsPerPage = 5;
         int totalPages = (int) Math.ceil((double) fieldNames.length / fieldsPerPage);
@@ -87,7 +101,7 @@ public class EmployeeCreationWizard extends JDialog {
             disabilityDesc.setVisible(true);
             disabilityDescLabel.setVisible(true);
         });
-        
+
         disabilityNo.addActionListener(e -> {
             // Hide the disability description label and text field when "Not Disabled" is selected
             disabilityDesc.setVisible(false);
@@ -142,23 +156,23 @@ public class EmployeeCreationWizard extends JDialog {
                         JPanel disabilityContainer = new JPanel();
                         disabilityContainer.setBackground(BACKGROUND_COLOR);
                         disabilityContainer.setLayout(new BoxLayout(disabilityContainer, BoxLayout.Y_AXIS));
-                    
+
                         JPanel disabilityButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
                         disabilityButtonsPanel.setBackground(BACKGROUND_COLOR);
                         disabilityButtonsPanel.add(disabilityYes);
                         disabilityButtonsPanel.add(disabilityNo);
-                    
+
                         disabilityDesc.setPreferredSize(new Dimension(200, 24));
 
                         JPanel disabilityDescriptionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
                         disabilityDescriptionPanel.setBackground(BACKGROUND_COLOR);
                         disabilityDescriptionPanel.add(disabilityDescLabel);
                         disabilityDescriptionPanel.add(disabilityDesc);
-                    
+
                         disabilityDesc.setVisible(false);
                         disabilityDescLabel.setVisible(false);
                         disabilityDescriptionPanel.setVisible(false); // Hide container initially
-                    
+
                         disabilityYes.addActionListener(e -> {
                             disabilityDesc.setVisible(true);
                             disabilityDescLabel.setVisible(true);
@@ -166,7 +180,7 @@ public class EmployeeCreationWizard extends JDialog {
                             disabilityContainer.revalidate();
                             disabilityContainer.repaint();
                         });
-                    
+
                         disabilityNo.addActionListener(e -> {
                             disabilityDesc.setVisible(false);
                             disabilityDescLabel.setVisible(false);
@@ -174,12 +188,12 @@ public class EmployeeCreationWizard extends JDialog {
                             disabilityContainer.revalidate();
                             disabilityContainer.repaint();
                         });
-                    
+
                         disabilityContainer.add(disabilityButtonsPanel);
                         disabilityContainer.add(disabilityDescriptionPanel);
-                    
+
                         pagePanel.add(disabilityContainer);
-                        break;                    
+                        break;
                     case "Product_ID":
                         pagePanel.add(productDropdown);
                         break;
@@ -245,19 +259,19 @@ public class EmployeeCreationWizard extends JDialog {
         departmentDropdown.removeAllItems();
         departmentToProductsMap.clear();
         departmentNameToIdMap.clear();
-        
+
         productDropdown.removeAllItems(); // Optional: You may want to clear this too
         productNameToIdMap.clear();
-    
+
         employeeTypeDropdown.removeAllItems();
         employeeTypeToPayGroupMap.clear();
         employeeTypeNameToIdMap.clear();
-    
+
         officeDropdown.removeAllItems();
         officeNameToIdMap.clear();
-    
+
         try (Connection conn = DatabaseConnection.getConnection()) {
-    
+
             // Load departments
             ResultSet rs = conn.createStatement().executeQuery("SELECT Department_ID, Name FROM DEPARTMENT");
             while (rs.next()) {
@@ -266,7 +280,7 @@ public class EmployeeCreationWizard extends JDialog {
                 departmentDropdown.addItem(name);
                 departmentNameToIdMap.put(name, id);
             }
-    
+
             // Load department-to-product map (name-based)
             rs = conn.createStatement().executeQuery("SELECT Department_ID, Product_ID, Name FROM PRODUCT");
             while (rs.next()) {
@@ -278,7 +292,7 @@ public class EmployeeCreationWizard extends JDialog {
                     .computeIfAbsent(departmentNameFromId(deptId), k -> new ArrayList<>())
                     .add(prodName);
             }
-    
+
             // Load employee types
             rs = conn.createStatement().executeQuery("SELECT Employee_Type_ID, Name, PayGroup_ID FROM EMPLOYEE_TYPE");
             while (rs.next()) {
@@ -288,7 +302,7 @@ public class EmployeeCreationWizard extends JDialog {
                 employeeTypeNameToIdMap.put(name, id);
                 employeeTypeToPayGroupMap.put(id, rs.getString("PayGroup_ID"));
             }
-    
+
             // Load offices
             rs = conn.createStatement().executeQuery("SELECT Office_ID, Name FROM OFFICE");
             while (rs.next()) {
@@ -297,14 +311,14 @@ public class EmployeeCreationWizard extends JDialog {
                 officeDropdown.addItem(name);
                 officeNameToIdMap.put(name, id);
             }
-    
+
         } catch (SQLException | ClassNotFoundException ex) {
             JOptionPane.showMessageDialog(this, "Error loading dropdowns: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
-    
+
         departmentDropdown.setSelectedIndex(0); // Triggers product population
     }
-    
+
 
     private void saveEmployee() {
         try (Connection conn = DatabaseConnection.getConnection()) {
@@ -314,7 +328,7 @@ public class EmployeeCreationWizard extends JDialog {
                 int count = rs.getInt("Total") + 1;
                 employeeNo += String.format("%03d", count);
             }
-    
+
             StringBuilder sql = new StringBuilder("INSERT INTO EMPLOYEE (");
             for (String f : fieldNames) {
                 sql.append(f).append(", ");
@@ -323,10 +337,10 @@ public class EmployeeCreationWizard extends JDialog {
             sql.append("?,".repeat(fieldNames.length + 4));
             sql.setLength(sql.length() - 1); // remove trailing comma
             sql.append(")");
-    
+
             PreparedStatement ps = conn.prepareStatement(sql.toString());
             int idx = 1;
-    
+
             for (int i = 0; i < fieldNames.length; i++) {
                 switch (fieldNames[i]) {
                     case "Sex":
@@ -364,16 +378,16 @@ public class EmployeeCreationWizard extends JDialog {
                         break;
                 }
             }
-    
+
             // Auto-filled fields
             ps.setString(idx++, employeeNo); // Employee_No
             ps.setDate(idx++, new java.sql.Date(System.currentTimeMillis())); // Last_Hired
             ps.setString(idx++, "Active"); // Status
-    
+
             String empTypeId = employeeTypeNameToIdMap.get((String) employeeTypeDropdown.getSelectedItem());
             String payGroupId = employeeTypeToPayGroupMap.get(empTypeId);
             ps.setString(idx++, payGroupId); // Pay_Group
-    
+
             ps.executeUpdate();
             JOptionPane.showMessageDialog(this, "Employee added successfully!");
             dispose();
@@ -381,7 +395,7 @@ public class EmployeeCreationWizard extends JDialog {
         } catch (SQLException | ClassNotFoundException ex) {
             JOptionPane.showMessageDialog(this, "Error saving employee: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
-    }    
+    }
 
     private String departmentNameFromId(String id) {
         return departmentNameToIdMap.entrySet()

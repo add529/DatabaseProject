@@ -7,8 +7,10 @@
 - Make Presentation
 
 ## Tasks for Software
-- Fix add employee wizard
--
+- Fix pay group
+- Fix products
+- Tweak employee creation wizard
+- Product ID doesn't display
 
 ---
 

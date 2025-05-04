@@ -1,10 +1,9 @@
 import java.awt.*;
 import java.sql.*;
-
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
-public class EmployeePanel extends JPanel {
+public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
 
     private final JTable table;
     private final DefaultTableModel tableModel;
@@ -16,12 +15,12 @@ public class EmployeePanel extends JPanel {
     private final Color BOT_GRADIENT = new Color (0xd0e8bd);
 
     String[] fieldNames = {
-        "SSN", "FName", "MName", "LName", "DOB", "Address", "Sex", "Nationality", 
-        "Ethnic_ID", "Marital_Status", "Disability_Status", "Location", 
-        "Cost_Center", "Seniority", "Job_Code", "Job_Desc", "Employee_Type", 
+        "SSN", "FName", "MName", "LName", "DOB", "Address", "Sex", "Nationality",
+        "Ethnic_ID", "Marital_Status", "Disability_Status", "Location",
+        "Cost_Center", "Seniority", "Job_Code", "Job_Desc", "Employee_Type",
         "Department_ID", "Office_ID"
     };
-    
+
 
 
     public EmployeePanel() {
@@ -55,7 +54,7 @@ public class EmployeePanel extends JPanel {
             btn.setForeground(Color.WHITE);
             btn.setFocusPainted(false);
         }
-        
+
         //Add Navigation Buttons to Navigation Bar
         navBar.add(selectBtn);  //Add Button
         navBar.add(Box.createVerticalStrut(10)); //Spacing
@@ -153,21 +152,25 @@ public class EmployeePanel extends JPanel {
         selectBtn.addActionListener(e -> {
     // Get the selected row
     int selectedRow = table.getSelectedRow();
-    
+
     // Check if a row is selected
     if (selectedRow != -1) {
         // Get the employee number from the first column (Employee No)
         String employeeNo = (String) table.getValueAt(selectedRow, 0);
 
         // Open the EmployeeEditWizard to edit the selected employee's details
-        EmployeeEditWizard wizard = new EmployeeEditWizard((JFrame) SwingUtilities.getWindowAncestor(this), employeeNo);
+        EmployeeEditWizard wizard = new EmployeeEditWizard((JFrame) SwingUtilities.getWindowAncestor(this), employeeNo, this);
         wizard.setVisible(true);
     } else {
         // Show an error message if no row is selected
         JOptionPane.showMessageDialog(this, "Please select an employee to edit.", "No Employee Selected", JOptionPane.WARNING_MESSAGE);
     }
 });
-        addBtn.addActionListener(e -> new EmployeeCreationWizard((JFrame) SwingUtilities.getWindowAncestor(this)).setVisible(true));
+        addBtn.addActionListener(e -> {
+    // Open the EmployeeCreationWizard to add a new employee
+    EmployeeCreationWizard wizard = new EmployeeCreationWizard((JFrame) SwingUtilities.getWindowAncestor(this), this);
+    wizard.setVisible(true);
+});
 
 
         // === INITIAL LOAD OF TABLE ===
@@ -228,7 +231,7 @@ public class EmployeePanel extends JPanel {
     private void searchProduct() {
         String employeeNo = searchField.getText().trim();
         if (employeeNo.isEmpty()) { //If nothing in search, error message shows
-            showError("Please enter an Employee Number to search."); 
+            showError("Please enter an Employee Number to search.");
             return;
         }
 
@@ -258,7 +261,7 @@ public class EmployeePanel extends JPanel {
 
     // === CALLED WHEN SHOW ALL PRESSED, SHOWS PRODUCT DETAILS ===
 
-    private void loadAllEmployees() { 
+    private void loadAllEmployees() {
 
         tableModel.setColumnIdentifiers(new String[]{"Employee No", "First Name", "Last Name", "Job Description", "Status"});
         tableModel.setRowCount(0);
@@ -290,14 +293,14 @@ public class EmployeePanel extends JPanel {
             tableModel.setRowCount(0);
             try (Connection conn = DatabaseConnection.getConnection()) {
                 String sql = """
-                        SELECT 
-                            e.SSN, 
-                            e.FName, 
-                            e.LName, 
-                            e.DOB, 
-                            e.Sex, 
+                        SELECT
+                            e.SSN,
+                            e.FName,
+                            e.LName,
+                            e.DOB,
+                            e.Sex,
                             e.Disability_Status
-                        FROM 
+                        FROM
                             EMPLOYEE e;
                         """;
                 PreparedStatement stmt = conn.prepareStatement(sql);
@@ -318,7 +321,7 @@ public class EmployeePanel extends JPanel {
             padTableRows(35);
             selectBtn.setEnabled(false); // Disable Select button
         }
-    
+
         // === CALLED WHEN SUPERVISORS PRESSED, SHOWS EMPLOYEE SUPERVISORS ===
 
         private void showEmployeeSupervisors() {
@@ -326,18 +329,18 @@ public class EmployeePanel extends JPanel {
             tableModel.setRowCount(0);
             try (Connection conn = DatabaseConnection.getConnection()) {
                 String sql = """
-                           SELECT 
+                           SELECT
                                 e.Employee_No,
                                 e.FName,
                                 e.LName,
                                 e.SuperSSN,
                                 s.FName AS "Super_First",
                                 s.LName AS "Super_Last"
-                            FROM 
+                            FROM
                                 EMPLOYEE e
-                            LEFT JOIN 
-                                EMPLOYEE s 
-                            ON 
+                            LEFT JOIN
+                                EMPLOYEE s
+                            ON
                                 e.SuperSSN = s.SSN;
                             """;
                 PreparedStatement stmt = conn.prepareStatement(sql);
@@ -366,16 +369,16 @@ public class EmployeePanel extends JPanel {
             tableModel.setRowCount(0);
             try (Connection conn = DatabaseConnection.getConnection()) {
                 String sql = """
-                    SELECT 
-                        e.Employee_No, 
-                        e.FName, 
-                        e.LName, 
-                        e.Location, 
-                        o.Name, 
+                    SELECT
+                        e.Employee_No,
+                        e.FName,
+                        e.LName,
+                        e.Location,
+                        o.Name,
                         o.Location AS 'Office_Location'
-                    FROM 
+                    FROM
                         EMPLOYEE e
-                    JOIN 
+                    JOIN
                         OFFICE o
                     ON
                         e.Office_ID = o.Office_ID;
@@ -400,22 +403,22 @@ public class EmployeePanel extends JPanel {
         }
 
     // === CALLED WHEN ASSETS PRESSED, EMPLOYEE ASSETS SHOWN ===
-   
+
     private void showEmployeeAssets() {
         tableModel.setColumnIdentifiers(new String[]{"Employee No", "First Name", "Last Name", "Asset ID", "Asset Type", "Warranty Exp. Date"});
         tableModel.setRowCount(0);
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = """
-                SELECT 
-                    e.Employee_No, 
-                    e.FName, 
-                    e.LName, 
-                    a.Asset_ID, 
+                SELECT
+                    e.Employee_No,
+                    e.FName,
+                    e.LName,
+                    a.Asset_ID,
                     a.Type,
                     a.Warrant_Exp_Date
-                FROM 
+                FROM
                     EMPLOYEE e
-                JOIN 
+                JOIN
                     ASSET a
                 ON
                     e.Employee_No = a.Employee_No;
@@ -439,4 +442,9 @@ public class EmployeePanel extends JPanel {
         selectBtn.setEnabled(false); // Disable Select button
     }
 
+    @Override
+    public void onEmployeeDataUpdated() {
+        // Refresh the table when employee data is updated
+        loadAllEmployees();
+    }
 }
