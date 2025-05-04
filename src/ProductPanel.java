@@ -379,7 +379,7 @@ public class ProductPanel extends JPanel {
         finishButton.addActionListener(e -> {
             try (Connection conn = DatabaseConnection.getConnection()) {
                 // Generate a unique Product_ID
-                String productId = "P-";
+                String productId = "Pr-";
                 String countQuery = "SELECT COUNT(*) AS Total FROM PRODUCT";
                 ResultSet rs = conn.createStatement().executeQuery(countQuery);
                 if (rs.next()) {
