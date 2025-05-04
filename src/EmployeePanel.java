@@ -10,6 +10,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
     private final JTextField searchField;
     private final JButton searchBtn;
     private final JButton selectBtn;
+    private final JButton setSuperBtn;
     private final Color DARK_BG = new Color (0x0c565f);
     private final Color TOP_GRADIENT = new Color (0x9ed7cf);
     private final Color BOT_GRADIENT = new Color (0xd0e8bd);
@@ -40,6 +41,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
         //Navigation Bar Button Creation
         selectBtn = new JButton("Select"); //Instantiate Select Button
         JButton showAllBtn = new JButton("Show All"); //Instantiate Show All Button
+        setSuperBtn = new JButton("Set Super"); //Instantiate 
         JButton showPII = new JButton("PII"); //Instantiate PII Button
         JButton showEmpAssets = new JButton("Assets"); //Instantiate Assets Button
         JButton showEmpSuper = new JButton("Supervisors"); //Instantiate Supervisors Button
@@ -47,7 +49,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
 
 
         //Navigation Bar Button Formatting
-        for (JButton btn : new JButton[]{showEmpSuper, showEmpLoc, showPII, showEmpAssets, selectBtn, showAllBtn}) {
+        for (JButton btn : new JButton[]{setSuperBtn, showEmpSuper, showEmpLoc, showPII, showEmpAssets, selectBtn, showAllBtn}) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
             btn.setPreferredSize(new Dimension(120, 40));
             btn.setMinimumSize(new Dimension(120, 40));
@@ -59,6 +61,8 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
 
         //Add Navigation Buttons to Navigation Bar
         navBar.add(selectBtn);  //Add Button
+        navBar.add(Box.createVerticalStrut(10)); //Spacing
+        navBar.add(setSuperBtn);  //Add Button
         navBar.add(Box.createVerticalStrut(10)); //Spacing
         navBar.add(showAllBtn);
         navBar.add(Box.createVerticalStrut(10));
@@ -147,6 +151,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
 
         searchBtn.addActionListener(e -> searchProduct());
         showPII.addActionListener(e -> showEmployeePII());
+        setSuperBtn.addActionListener(e -> openSuperDialog());
         showEmpSuper.addActionListener(e -> showEmployeeSupervisors());
         showEmpAssets.addActionListener(e -> showEmployeeAssets());
         showEmpLoc.addActionListener(e -> showEmployeeLocations());
@@ -286,6 +291,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
 
         padTableRows(35); // Keeps empty rows for design
         selectBtn.setEnabled(true); // Enable Select button
+        setSuperBtn.setEnabled(true);
     }
 
         // === CALLED WHEN PII PRESSED, SHOWS EMPLOYEE PERSONALLY IDENTIFIABLE INFORMATION ===
@@ -322,6 +328,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
             }
             padTableRows(35);
             selectBtn.setEnabled(false); // Disable Select button
+            setSuperBtn.setEnabled(false);
         }
 
         // === CALLED WHEN SUPERVISORS PRESSED, SHOWS EMPLOYEE SUPERVISORS ===
@@ -331,20 +338,21 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
             tableModel.setRowCount(0);
             try (Connection conn = DatabaseConnection.getConnection()) {
                 String sql = """
-                           SELECT
-                                e.Employee_No,
-                                e.FName,
-                                e.LName,
-                                e.SuperSSN,
-                                s.FName AS "Super_First",
-                                s.LName AS "Super_Last"
-                            FROM
-                                EMPLOYEE e
-                            LEFT JOIN
-                                EMPLOYEE s
-                            ON
-                                e.SuperSSN = s.SSN;
-                            """;
+                SELECT
+                    e.Employee_No,
+                    e.FName,
+                    e.LName,
+                    s.Employee_No AS Supervisor_No, 
+                    s.FName AS Super_First,
+                    s.LName AS Super_Last
+                FROM
+                    EMPLOYEE e
+                LEFT JOIN
+                    EMPLOYEE s
+                ON
+                    e.SuperSSN = s.SSN;
+            """;
+
                 PreparedStatement stmt = conn.prepareStatement(sql);
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
@@ -352,7 +360,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
                         rs.getString("Employee_No"),
                         rs.getString("FName"),
                         rs.getString("LName"),
-                        rs.getString("SuperSSN"),
+                        rs.getString("Supervisor_No"),
                         rs.getString("Super_First"),
                         rs.getString("Super_Last")
                     });
@@ -362,6 +370,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
             }
             padTableRows(35);
             selectBtn.setEnabled(false); // Disable Select button
+            setSuperBtn.setEnabled(true); // Disable Select button
         }
 
         // === CALLED WHEN LOCATIONS PRESSED, SHOWS EMPLOYEE OFFICES AND LOCATIONS ===
@@ -402,6 +411,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
             }
             padTableRows(35);
             selectBtn.setEnabled(false); // Disable Select button
+            setSuperBtn.setEnabled(false);
         }
 
     // === CALLED WHEN ASSETS PRESSED, EMPLOYEE ASSETS SHOWN ===
@@ -442,6 +452,135 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
         }
         padTableRows(35);
         selectBtn.setEnabled(false); // Disable Select button
+        setSuperBtn.setEnabled(false);
+    }
+
+    // === CALLED WHEN Set Super BUTTON PRESSED, CONTROLS MODAL ===
+
+    private void openSuperDialog() {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow == -1) {
+            showError("Please select a row to add or edit supervisor.");
+            return;
+        }
+    
+        // Get visible values from table
+        String eID = (String) tableModel.getValueAt(selectedRow, 0);
+    
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "SELECT * FROM EMPLOYEE WHERE Employee_No = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, eID);
+            ResultSet rs = stmt.executeQuery();
+            if (!rs.next()) {
+                showError("Could not retrieve full record.");
+                return;
+            }
+    
+            String superSSN = rs.getString("SuperSSN");  // Get supervisor's SSN
+
+            String superID = null;
+        
+            if (superSSN != null && !superSSN.isEmpty()) {
+                String superSql = "SELECT Employee_No FROM EMPLOYEE WHERE SSN = ?";
+                try (PreparedStatement superStmt = conn.prepareStatement(superSql)) {
+                    superStmt.setString(1, superSSN);
+                    ResultSet superRs = superStmt.executeQuery();
+                    if (superRs.next()) {
+                        superID = superRs.getString("Employee_No");
+                    }
+                }
+            }
+
+    
+            // === Build Modal Dialog ===
+            JLabel idField = new JLabel(eID);
+            JTextField superIdField = new JTextField(superID);
+    
+    
+            JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
+            panel.add(new JLabel("Employee ID:")); panel.add(idField);
+            panel.add(new JLabel("Supervisor ID:")); panel.add(superIdField);
+    
+            Object[] options = {"Update", "Delete", "Cancel"};
+            int result = JOptionPane.showOptionDialog(this, panel, "Set Supervisor By Id",
+                    JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
+                    null, options, options[0]);
+    
+            if (result == JOptionPane.YES_OPTION) {
+                // Update
+                updateSuper(
+                    idField.getText().trim(),
+                    superIdField.getText().trim()
+                );
+
+            } else if (result == JOptionPane.NO_OPTION) {
+                // Delete
+                deleteSuper(eID);
+            }
+    
+        } catch (Exception ex) {
+            showError("Error retrieving supervisor: " + ex.getMessage());
+        }
+    }
+
+    private void updateSuper(String employeeId, String supervisorId) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            // Step 1: Get SSN of the supervisor using their Employee_No
+            String getSSNSql = "SELECT SSN FROM EMPLOYEE WHERE Employee_No = ?";
+            PreparedStatement getSSNStmt = conn.prepareStatement(getSSNSql);
+            getSSNStmt.setString(1, supervisorId);
+            ResultSet rs = getSSNStmt.executeQuery();
+    
+            if (!rs.next()) {
+                showError("Supervisor not found with Employee_No: " + supervisorId);
+                return;
+            }
+    
+            String supervisorSSN = rs.getString("SSN");
+    
+            // Step 2: Update selected employee's SuperSSN
+            String updateSql = "UPDATE EMPLOYEE SET SuperSSN = ? WHERE Employee_No = ?";
+            PreparedStatement updateStmt = conn.prepareStatement(updateSql);
+            updateStmt.setString(1, supervisorSSN);
+            updateStmt.setString(2, employeeId);
+            int rows = updateStmt.executeUpdate();
+    
+            if (rows > 0) {
+                JOptionPane.showMessageDialog(this, "Supervisor updated successfully.");
+                showEmployeeSupervisors();
+            } else {
+                showError("Update failed. Employee not found.");
+            }
+    
+        } catch (Exception ex) {
+            showError("Error updating supervisor: " + ex.getMessage());
+        }
+    }
+    
+    
+
+    // === CALLED WHEN DELETE BUTTON PRESSED IN MODAL ===
+
+    private void deleteSuper(String employeeId) {
+        int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to remove this employee's supervisor?", "Confirm", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
+    
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "UPDATE EMPLOYEE SET SuperSSN = NULL WHERE Employee_No = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, employeeId);  // The employee whose supervisor you're removing
+            int rows = stmt.executeUpdate();
+    
+            if (rows > 0) {
+                JOptionPane.showMessageDialog(this, "Supervisor removed successfully.");
+                showEmployeeSupervisors();  // Or loadAllEmployees(), depending on your app
+            } else {
+                showError("Update failed. Employee not found.");
+            }
+        } catch (Exception ex) {
+            showError("Error removing supervisor: " + ex.getMessage());
+        }
     }
 
     @Override
