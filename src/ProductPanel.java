@@ -284,12 +284,15 @@ public class ProductPanel extends JPanel {
         finishButton.addActionListener(e -> {
             try (Connection conn = DatabaseConnection.getConnection()) {
                 // Generate a unique Product_ID
+                String maxIdQuery = "SELECT MAX(CAST(SUBSTRING(Product_ID, 4) AS UNSIGNED)) AS MaxID FROM PRODUCT";
+                ResultSet maxIdResult = conn.createStatement().executeQuery(maxIdQuery);
                 String productId = "Pr-";
-                String countQuery = "SELECT COUNT(*) AS Total FROM PRODUCT";
-                ResultSet rs = conn.createStatement().executeQuery(countQuery);
-                if (rs.next()) {
-                    int count = rs.getInt("Total") + 1;
-                    productId += String.format("%03d", count); // Format as P-XXX
+                
+                if (maxIdResult.next()) {
+                    int maxId = maxIdResult.getInt("MaxID");
+                    productId += String.format("%03d", maxId + 1);  // Increment the maximum ID and format
+                } else {
+                    productId += "001";  // Start from 001 if no records exist
                 }
 
                 // Build SQL query

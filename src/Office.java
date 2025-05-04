@@ -313,14 +313,16 @@ public class Office extends JPanel {
         finishButton.addActionListener(e -> {
             try (Connection conn = DatabaseConnection.getConnection()) {
                 // Generate a unique Paygroup ID
+                String maxIdQuery = "SELECT MAX(CAST(SUBSTRING(Office_ID, 4) AS UNSIGNED)) AS MaxID FROM OFFICE";
+                ResultSet maxIdResult = conn.createStatement().executeQuery(maxIdQuery);
                 String oID = "O-";
-                String countQuery = "SELECT COUNT(*) AS Total FROM OFFICE";
-                ResultSet rs = conn.createStatement().executeQuery(countQuery);
-                if (rs.next()) {
-                    int count = rs.getInt("Total") + 1;
-                    oID += String.format("%03d", count); // Format as O-XXX
+                
+                if (maxIdResult.next()) {
+                    int maxId = maxIdResult.getInt("MaxID");
+                    oID += String.format("%03d", maxId + 1);  // Increment the maximum ID and format
+                } else {
+                    oID += "001";  // Start from 001 if no records exist
                 }
-
                 // Build SQL query
                 String sql = "INSERT INTO OFFICE (Office_ID, Name, Location) VALUES (?, ?, ?)";
                 PreparedStatement ps = conn.prepareStatement(sql);

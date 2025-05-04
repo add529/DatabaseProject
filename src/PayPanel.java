@@ -357,12 +357,15 @@ public class PayPanel extends JPanel {
         finishButton.addActionListener(e -> {
             try (Connection conn = DatabaseConnection.getConnection()) {
                 // Generate a unique Paygroup ID
+                String maxIdQuery = "SELECT MAX(CAST(SUBSTRING(PayGroup_ID, 4) AS UNSIGNED)) AS MaxID FROM PAY_GROUP";
+                ResultSet maxIdResult = conn.createStatement().executeQuery(maxIdQuery);
                 String pgID = "PG-";
-                String countQuery = "SELECT COUNT(*) AS Total FROM PAY_GROUP";
-                ResultSet rs = conn.createStatement().executeQuery(countQuery);
-                if (rs.next()) {
-                    int count = rs.getInt("Total") + 1;
-                    pgID += String.format("%03d", count); // Format as PG-XXX
+                
+                if (maxIdResult.next()) {
+                    int maxId = maxIdResult.getInt("MaxID");
+                    pgID += String.format("%03d", maxId + 1);  // Increment the maximum ID and format
+                } else {
+                    pgID += "001";  // Start from 001 if no records exist
                 }
 
                 // Build SQL query

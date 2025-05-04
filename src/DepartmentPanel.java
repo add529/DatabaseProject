@@ -228,12 +228,15 @@ public class DepartmentPanel extends JPanel {
         finishButton.addActionListener(e -> {
             try (Connection conn = DatabaseConnection.getConnection()) {
                 // Generate a unique departmentid
+                String maxIdQuery = "SELECT MAX(CAST(SUBSTRING(Department_ID, 4) AS UNSIGNED)) AS MaxID FROM DEPARTMENT";
+                ResultSet maxIdResult = conn.createStatement().executeQuery(maxIdQuery);
                 String departmentId = "D-";
-                String countQuery = "SELECT COUNT(*) AS Total FROM DEPARTMENT";
-                ResultSet rs = conn.createStatement().executeQuery(countQuery);
-                if (rs.next()) {
-                    int count = rs.getInt("Total") + 1;
-                    departmentId += String.format("%03d", count); // Format as P-XXX
+                
+                if (maxIdResult.next()) {
+                    int maxId = maxIdResult.getInt("MaxID");
+                    departmentId += String.format("%03d", maxId + 1);  // Increment the maximum ID and format
+                } else {
+                    departmentId += "001";  // Start from 001 if no records exist
                 }
 
                 // Build SQL query

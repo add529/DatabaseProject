@@ -351,12 +351,15 @@ public class Assets extends JPanel {
         finishButton.addActionListener(e -> {
             try (Connection conn = DatabaseConnection.getConnection()) {
                 // Generate a unique Paygroup ID
+                String maxIdQuery = "SELECT MAX(CAST(SUBSTRING(Asset_ID, 4) AS UNSIGNED)) AS MaxID FROM ASSET";
+                ResultSet maxIdResult = conn.createStatement().executeQuery(maxIdQuery);
                 String aID = "A-";
-                String countQuery = "SELECT COUNT(*) AS Total FROM ASSET";
-                ResultSet rs = conn.createStatement().executeQuery(countQuery);
-                if (rs.next()) {
-                    int count = rs.getInt("Total") + 1;
-                    aID += String.format("%03d", count); // Format as A-XXX
+                
+                if (maxIdResult.next()) {
+                    int maxId = maxIdResult.getInt("MaxID");
+                    aID += String.format("%03d", maxId + 1);  // Increment the maximum ID and format
+                } else {
+                    aID += "001";  // Start from 001 if no records exist
                 }
 
                 // Build SQL query
