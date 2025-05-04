@@ -14,13 +14,6 @@ public class ProductPanel extends JPanel {
     private final Color TOP_GRADIENT = new Color (0x9ed7cf);
     private final Color BOT_GRADIENT = new Color (0xd0e8bd);
 
-    private String[] fieldNames = {
-        "PayGroup_ID", "SSN", "FName", "MName", "LName", "DOB", "Address", "Sex",
-        "Nationality", "Ethnic_ID", "Marital_Status", "Disability_Status", "Location",
-        "Status", "Cost_Center", "Seniority", "Job_Code", "Job_Desc", "Last_Hired",
-        "SuperSSN", "Product_ID", "Department_ID", "Employee_Type", "Pay_Group", "Office_ID"
-    };
-
     private JTextField NameField, DescriptionField, statusField, versionField, nameField, productIdField, departmentIdField;
 
     public ProductPanel() {
@@ -40,11 +33,10 @@ public class ProductPanel extends JPanel {
         //Navigation Bar Button Creation
         selectBtn = new JButton("Select"); //Instantiate Select Button
         JButton showAllBtn = new JButton("Show All"); //Instantiate Show All Button
-        JButton showEmpPay = new JButton("Type and Pay"); //Instantiate Type and Pay Button
 
 
         //Navigation Bar Button Formatting
-        for (JButton btn : new JButton[]{showEmpPay, selectBtn, showAllBtn}) {
+        for (JButton btn : new JButton[]{selectBtn, showAllBtn}) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
             btn.setMaximumSize(new Dimension(120, 40));
             btn.setBackground(DARK_BG);
@@ -56,8 +48,6 @@ public class ProductPanel extends JPanel {
         navBar.add(selectBtn);
         navBar.add(Box.createVerticalStrut(10)); //Spacing
         navBar.add(showAllBtn);
-        navBar.add(Box.createVerticalStrut(10));
-        navBar.add(showEmpPay); // This can be changed to show Employlees in certain pay groups
         navBar.add(Box.createVerticalStrut(10));
 
 
@@ -130,41 +120,12 @@ public class ProductPanel extends JPanel {
         addBtn.setBackground(DARK_BG);
         addBtn.setForeground(Color.WHITE);
     
-
         // Add buttons to the button panel
         buttonPanel.add(addBtn);
 
-        // Initialize the text fields and assign them to class-level variables
-        productIdField = new JTextField(15);
-        NameField = new JTextField(15); // Assign to class-level variable
-        DescriptionField = new JTextField(15); // Assign to class-level variable
-        statusField = new JTextField(15); // Assign to class-level variable
-        versionField = new JTextField(15); // Assign to class-level variable
-        departmentIdField = new JTextField(15);
-        departmentIdField.setEditable(false); // Make Department_ID field non-editable
-
-        // Create a panel for input fields and labels
-        JPanel fieldsPanel = new JPanel(new GridLayout(0, 2, 10, 10)); // Grid layout for labels and fields
-        fieldsPanel.setOpaque(false); // Make it transparent
-        fieldsPanel.setVisible(false); // Initially hidden
-
-        // Add fields and labels to the fields panel
-        fieldsPanel.add(new JLabel("Product ID:"));
-        fieldsPanel.add(productIdField);
-        fieldsPanel.add(new JLabel("Name:"));
-        fieldsPanel.add(NameField);
-        fieldsPanel.add(new JLabel("Description:"));
-        fieldsPanel.add(DescriptionField);
-        fieldsPanel.add(new JLabel("Status:"));
-        fieldsPanel.add(statusField);
-        fieldsPanel.add(new JLabel("Version:"));
-        fieldsPanel.add(versionField);
-        fieldsPanel.add(new JLabel("Department ID:"));
-        fieldsPanel.add(departmentIdField);
-
         // Add panels to the input panel
         inputPanel.add(buttonPanel, BorderLayout.NORTH); // Buttons at the top
-        inputPanel.add(fieldsPanel, BorderLayout.CENTER); // Fields below the buttons
+    
 
         // Add action listeners
         selectBtn.addActionListener(e -> openEditDialog());
@@ -178,7 +139,6 @@ public class ProductPanel extends JPanel {
         // === ACTION LISTENERS - These say what happens when button is pressed ===
 
         searchBtn.addActionListener(e -> searchProduct());
-        showEmpPay.addActionListener(e -> standIn());
         showAllBtn.addActionListener(e -> loadAllProducts());
         addBtn.addActionListener(e -> openCreationWizard());
 
@@ -294,12 +254,6 @@ public class ProductPanel extends JPanel {
 
         padTableRows(35); // Keeps empty rows for design
         selectBtn.setEnabled(true); // Enable Select button
-    }
-
-    // === CALLED WHEN DEPARTMENTS PRESSED, SHOWS PRODUCT TO DEPARTMENT DETAILS ===
-
-    private void standIn() {
-
     }
 
     // === CALLED WHEN ADD BUTTON PRESSED, CONTROLS MODAL ===

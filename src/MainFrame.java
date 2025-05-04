@@ -17,9 +17,9 @@ public class MainFrame extends JFrame {
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
 
-        JButton employeeBtn = new JButton("Employee");
-        JButton departmentBtn = new JButton("Department");
-        JButton payBtn = new JButton("Pay Group");
+        JButton employeeBtn = new JButton("Employees");
+        JButton departmentBtn = new JButton("Departments");
+        JButton payBtn = new JButton("Pay Groups");
         JButton productsBtn = new JButton("Products");
 
         toolBar.add(employeeBtn);

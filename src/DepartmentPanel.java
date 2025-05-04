@@ -187,13 +187,13 @@ public class DepartmentPanel extends JPanel {
               // === CALLED WHEN ADD BUTTON PRESSED, CONTROLS MODAL ===
 
     private void openCreationWizard() {
-        JDialog wizard = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Add New Product", true);
+        JDialog wizard = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Add New Department", true);
         wizard.setSize(500, 400);
         wizard.setLocationRelativeTo(this);
         wizard.setLayout(new BorderLayout(10, 10)); // Add padding around the dialog
 
         // Fields for the product
-        String[] fieldNames = {"Name", "Description", "Status", "Version", "Department_ID"};
+        String[] fieldNames = {"Name", "Budget", "Employee Count", "Department Head SSN", "Department Head Bonus"};
         JTextField[] wizardFields = new JTextField[fieldNames.length];
 
         JPanel fieldsPanel = new JPanel(new GridLayout(0, 2, 10, 10)); // Add padding between fields
@@ -212,12 +212,12 @@ public class DepartmentPanel extends JPanel {
         finishButton.addActionListener(e -> {
             try (Connection conn = DatabaseConnection.getConnection()) {
                 // Generate a unique Product_ID
-                String productId = "D-";
+                String departmentId = "D-";
                 String countQuery = "SELECT COUNT(*) AS Total FROM DEPARTMENT";
                 ResultSet rs = conn.createStatement().executeQuery(countQuery);
                 if (rs.next()) {
                     int count = rs.getInt("Total") + 1;
-                    productId += String.format("%03d", count); // Format as P-XXX
+                    departmentId += String.format("%03d", count); // Format as P-XXX
                 }
 
                 // Build SQL query
@@ -225,7 +225,7 @@ public class DepartmentPanel extends JPanel {
                 PreparedStatement ps = conn.prepareStatement(sql);
 
                 // Set Product_ID
-                ps.setString(1, productId);
+                ps.setString(1, departmentId);
 
                 // Set other fields
                 for (int i = 0; i < fieldNames.length; i++) {
@@ -239,7 +239,7 @@ public class DepartmentPanel extends JPanel {
                     wizard.dispose(); // Close the wizard
                 }
             } catch (Exception ex) {
-                showError("Error adding product: " + ex.getMessage());
+                showError("Error adding department: " + ex.getMessage());
             }
         });
 
