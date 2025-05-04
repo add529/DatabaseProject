@@ -41,7 +41,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
         //Navigation Bar Button Creation
         selectBtn = new JButton("Select"); //Instantiate Select Button
         JButton showAllBtn = new JButton("Show All"); //Instantiate Show All Button
-        setSuperBtn = new JButton("Set Super"); //Instantiate 
+        setSuperBtn = new JButton("Set Super"); //Instantiate
         JButton showPII = new JButton("PII"); //Instantiate PII Button
         JButton showContact = new JButton("Contacts"); //Instantiate PII Button
         JButton showEmpAssets = new JButton("Assets"); //Instantiate Assets Button
@@ -241,18 +241,23 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
 
     private void searchProduct() {
         String employeeNo = searchField.getText().trim();
-        if (employeeNo.isEmpty()) { //If nothing in search, error message shows
+        if (employeeNo.isEmpty()) { // If nothing in search, show error message
             showError("Please enter an Employee Number to search.");
             return;
         }
 
-        tableModel.setRowCount(0);
-        try (Connection conn = DatabaseConnection.getConnection()) { //SQL code and connection for finding row from ID
+        // Set the correct column identifiers
+        tableModel.setColumnIdentifiers(new String[]{"Employee No", "First Name", "Last Name", "Job Description", "Status"});
+        tableModel.setRowCount(0); // Clear the table before adding new data
+
+        try (Connection conn = DatabaseConnection.getConnection()) { // SQL code and connection for finding row from ID
             String sql = "SELECT Employee_No, FName, LName, Job_Desc, Status FROM EMPLOYEE WHERE Employee_No = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, employeeNo);
             ResultSet rs = stmt.executeQuery();
+
             if (rs.next()) {
+                // Add the retrieved employee data to the table
                 tableModel.addRow(new Object[]{
                     rs.getString("Employee_No"),
                     rs.getString("FName"),
@@ -267,7 +272,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
             showError("Error searching for employee: " + ex.getMessage());
         }
 
-        padTableRows(35); // This keeps the empty rows there for design purposes
+        padTableRows(35); // Keep empty rows for design purposes
     }
 
     // === CALLED WHEN SHOW ALL PRESSED, SHOWS PRODUCT DETAILS ===
@@ -383,7 +388,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
                     e.Employee_No,
                     e.FName,
                     e.LName,
-                    s.Employee_No AS Supervisor_No, 
+                    s.Employee_No AS Supervisor_No,
                     s.FName AS Super_First,
                     s.LName AS Super_Last
                 FROM
@@ -414,7 +419,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
             setSuperBtn.setEnabled(true); // Disable Select button
         }
 
-        
+
         // === CALLED WHEN LOCATIONS PRESSED, SHOWS EMPLOYEE OFFICES AND LOCATIONS ===
 
         private void showEmployeeLocations() {
@@ -505,10 +510,10 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
             showError("Please select a row to add or edit supervisor.");
             return;
         }
-    
+
         // Get visible values from table
         String eID = (String) tableModel.getValueAt(selectedRow, 0);
-    
+
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "SELECT * FROM EMPLOYEE WHERE Employee_No = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
@@ -518,11 +523,11 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
                 showError("Could not retrieve full record.");
                 return;
             }
-    
+
             String superSSN = rs.getString("SuperSSN");  // Get supervisor's SSN
 
             String superID = null;
-        
+
             if (superSSN != null && !superSSN.isEmpty()) {
                 String superSql = "SELECT Employee_No FROM EMPLOYEE WHERE SSN = ?";
                 try (PreparedStatement superStmt = conn.prepareStatement(superSql)) {
@@ -534,21 +539,21 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
                 }
             }
 
-    
+
             // === Build Modal Dialog ===
             JLabel idField = new JLabel(eID);
             JTextField superIdField = new JTextField(superID);
-    
-    
+
+
             JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
             panel.add(new JLabel("Employee ID:")); panel.add(idField);
             panel.add(new JLabel("Supervisor ID:")); panel.add(superIdField);
-    
+
             Object[] options = {"Update", "Delete", "Cancel"};
             int result = JOptionPane.showOptionDialog(this, panel, "Set Supervisor By Id",
                     JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
                     null, options, options[0]);
-    
+
             if (result == JOptionPane.YES_OPTION) {
                 // Update
                 updateSuper(
@@ -560,7 +565,7 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
                 // Delete
                 deleteSuper(eID);
             }
-    
+
         } catch (Exception ex) {
             showError("Error retrieving supervisor: " + ex.getMessage());
         }
@@ -573,47 +578,47 @@ public class EmployeePanel extends JPanel implements EmployeeUpdateListener {
             PreparedStatement getSSNStmt = conn.prepareStatement(getSSNSql);
             getSSNStmt.setString(1, supervisorId);
             ResultSet rs = getSSNStmt.executeQuery();
-    
+
             if (!rs.next()) {
                 showError("Supervisor not found with Employee_No: " + supervisorId);
                 return;
             }
-    
+
             String supervisorSSN = rs.getString("SSN");
-    
+
             // Step 2: Update selected employee's SuperSSN
             String updateSql = "UPDATE EMPLOYEE SET SuperSSN = ? WHERE Employee_No = ?";
             PreparedStatement updateStmt = conn.prepareStatement(updateSql);
             updateStmt.setString(1, supervisorSSN);
             updateStmt.setString(2, employeeId);
             int rows = updateStmt.executeUpdate();
-    
+
             if (rows > 0) {
                 JOptionPane.showMessageDialog(this, "Supervisor updated successfully.");
                 showEmployeeSupervisors();
             } else {
                 showError("Update failed. Employee not found.");
             }
-    
+
         } catch (Exception ex) {
             showError("Error updating supervisor: " + ex.getMessage());
         }
     }
-    
-    
+
+
 
     // === CALLED WHEN DELETE BUTTON PRESSED IN MODAL ===
 
     private void deleteSuper(String employeeId) {
         int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to remove this employee's supervisor?", "Confirm", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
-    
+
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "UPDATE EMPLOYEE SET SuperSSN = NULL WHERE Employee_No = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, employeeId);  // The employee whose supervisor you're removing
             int rows = stmt.executeUpdate();
-    
+
             if (rows > 0) {
                 JOptionPane.showMessageDialog(this, "Supervisor removed successfully.");
                 showEmployeeSupervisors();  // Or loadAllEmployees(), depending on your app
