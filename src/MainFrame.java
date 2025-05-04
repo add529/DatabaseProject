@@ -21,12 +21,18 @@ public class MainFrame extends JFrame {
         JButton departmentBtn = new JButton("Departments");
         JButton payBtn = new JButton("Pay Groups");
         JButton productsBtn = new JButton("Products");
+        JButton assetsBtn = new JButton("Assets");
+        JButton officeBtn = new JButton("Offices");
+        JButton employeeTypeBtn = new JButton("Employee Types");
 
         toolBar.add(employeeBtn);
         toolBar.add(departmentBtn);
-        toolBar.add(payBtn);
         toolBar.add(productsBtn);
-
+        toolBar.add(assetsBtn);
+        toolBar.add(officeBtn);
+        toolBar.add(employeeTypeBtn);
+        toolBar.add(payBtn);
+        
         add(toolBar, BorderLayout.NORTH);
 
         // ===== CardLayout Panel =====
@@ -41,8 +47,11 @@ public class MainFrame extends JFrame {
 
         contentPanel.add(employeeScrollPane, "employee");
         contentPanel.add(new JScrollPane(new DepartmentPanel()), "department");
-        contentPanel.add(new JScrollPane(new PayPanel()), "paygroup");
         contentPanel.add(new JScrollPane(new ProductPanel()), "product");
+        contentPanel.add(new JScrollPane(new Assets()), "asset");
+        contentPanel.add(new JScrollPane(new Office()), "office");
+        contentPanel.add(new JScrollPane(new EmployeeType()), "employee type");
+        contentPanel.add(new JScrollPane(new PayPanel()), "pay group");
 
 
         add(contentPanel, BorderLayout.CENTER);
@@ -50,7 +59,10 @@ public class MainFrame extends JFrame {
         // ===== Button Listeners =====
         employeeBtn.addActionListener(e -> cardLayout.show(contentPanel, "employee"));
         departmentBtn.addActionListener(e -> cardLayout.show(contentPanel, "department"));
-        payBtn.addActionListener(e -> cardLayout.show(contentPanel, "paygroup"));
+        payBtn.addActionListener(e -> cardLayout.show(contentPanel, "pay group"));
         productsBtn.addActionListener(e -> cardLayout.show(contentPanel, "product"));
+        assetsBtn.addActionListener(e -> cardLayout.show(contentPanel, "asset"));
+        officeBtn.addActionListener(e -> cardLayout.show(contentPanel, "office"));
+        employeeTypeBtn.addActionListener(e -> cardLayout.show(contentPanel, "employee type"));
     }
 }
