@@ -72,12 +72,12 @@ public class EmployeeType extends JPanel {
         //Search Panel Button Formatting
         searchPanel.setBackground(new Color(230, 255, 245));
         searchField = new JTextField(20);
-        searchBtn = new JButton("Search PayGroup By ID");
+        searchBtn = new JButton("Search Employee Type By ID");
         searchBtn.setBackground(DARK_BG);
         searchBtn.setForeground(Color.WHITE);
 
         //Search Panel Formatting
-        searchPanel.add(new JLabel("PayGroup ID:"));
+        searchPanel.add(new JLabel("Employee Type ID:"));
         searchPanel.add(searchField);
         searchPanel.add(searchBtn);
         searchPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 15, 0)); // Top, left, bottom, right
