@@ -25,7 +25,7 @@ public class LoginFrame extends JFrame {
         setContentPane(gradientPanel);
 
         // ===== Title Panel =====
-        JLabel titleLabel = new JLabel("Welcome to Your Company Admin Portal!", SwingConstants.CENTER);
+        JLabel titleLabel = new JLabel("Welcome to MySequel Solutions Company Portal!", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 32));
         titleLabel.setForeground(Color.WHITE);
         gradientPanel.add(titleLabel, BorderLayout.NORTH);
