@@ -214,17 +214,17 @@ public class EmployeeType extends JPanel {
             try (Connection conn = DatabaseConnection.getConnection()) {
                 String sql = """
                     SELECT
-                        t.Employee_Type_ID,
-                        t.Name AS Employee_Type_Name,
                         e.Employee_No,
                         e.FName,
-                        e.LName
+                        e.LName,
+                        e.Pay_Group,
+                        p.Name AS PayGroup_Name
                     FROM
-                        EMPLOYEE_TYPE t
+                        EMPLOYEE e
                     JOIN
-                        EMPLOYEE e ON t.Employee_Type_ID = e.Employee_Type
+                        PAY_GROUP p ON e.Pay_Group = p.PayGroup_ID
                     WHERE
-                        t.Employee_Type_ID = ?
+                        e.Employee_Type = ?
                 """;
                 PreparedStatement stmt = conn.prepareStatement(sql);
                 stmt.setString(1, employeeTypeId);
@@ -232,11 +232,11 @@ public class EmployeeType extends JPanel {
 
                 while (rs.next()) {
                     tableModel.addRow(new Object[]{
-                        rs.getString("Employee_Type_ID"),
-                        rs.getString("Employee_Type_Name"),
                         rs.getString("Employee_No"),
                         rs.getString("FName"),
-                        rs.getString("LName")
+                        rs.getString("LName"),
+                        rs.getString("Pay_Group"),
+                        rs.getString("PayGroup_Name")
                     });
                 }
             } catch (Exception ex) {
