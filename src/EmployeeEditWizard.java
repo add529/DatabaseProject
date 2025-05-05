@@ -9,7 +9,7 @@ public class EmployeeEditWizard extends JDialog {
 
     private final String[] fieldNames = {
         "SSN", "FName", "MName", "LName", "DOB", "Address", "Sex", "Nationality",
-        "Ethnic_ID", "Marital_Status", "Disability_Status", "Location", "Cost_Center",
+        "Ethnic_ID", "Marital_Status", "Disability_Status", "Status", "Location", "Cost_Center",
         "Seniority", "Job_Code", "Job_Desc", "Employee_Type", "Department_ID", "Product_ID", "Office_ID"
     };
 
@@ -25,6 +25,7 @@ public class EmployeeEditWizard extends JDialog {
     Map.entry("Ethnic_ID", "Ethnic Group"),
     Map.entry("Marital_Status", "Marital Status"),
     Map.entry("Disability_Status", "Disability Status"),
+    Map.entry("Status", "Status"),
     Map.entry("Location", "Home City"),
     Map.entry("Cost_Center", "Cost Center"),
     Map.entry("Seniority", "Seniority (Senior, Mid, Junior)"),
@@ -89,7 +90,7 @@ public class EmployeeEditWizard extends JDialog {
         cardPanel.setBackground(new Color(188, 223, 216));
         CardLayout cardLayout = (CardLayout) cardPanel.getLayout();
 
-        int fieldsPerPage = 5;
+        int fieldsPerPage = 6;
         int totalPages = (int) Math.ceil((double) fieldNames.length / fieldsPerPage);
         JLabel pageCounter = new JLabel("Page 1 of " + totalPages, JLabel.CENTER);
 
