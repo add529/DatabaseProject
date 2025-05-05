@@ -6,7 +6,9 @@
 
 The username and password to logging into the management software are username:**USER** and password:**password**
 
+The structure of this repository is as follows: .class files are located in /bin and .java files (source code) are located in /lib. The JDBC connector can be found in /lib
 All project documentation is located in the Documents folder of this repository.
+
 **The contents of Documents**:
 - Manuals
 - Presentation slides
