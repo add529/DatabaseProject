@@ -512,14 +512,14 @@ public class PayPanel extends JPanel {
 
     private void updatePayGroup(String originalId, String pay_rate, String pay_freq, String pay_per, String overtime, String name) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "UPDATE PAY_GROUP SET PayGroup_ID=?, Pay_Rate=?, Pay_Frequency=?, Pay_Period=?, Overtime_Rate=?, Name=? WHERE PayGroup_ID=?";
+            String sql = "UPDATE PAY_GROUP SET Pay_Rate=?, Pay_Frequency=?, Pay_Period=?, Overtime_Rate=?, Name=? WHERE PayGroup_ID=?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(2, pay_rate);
-            stmt.setString(3, pay_freq);
-            stmt.setString(4, pay_per);
-            stmt.setString(5, overtime);
-            stmt.setString(6, name);
-            stmt.setString(7, originalId);
+            stmt.setString(1, pay_rate);
+            stmt.setString(2, pay_freq);
+            stmt.setString(3, pay_per);
+            stmt.setString(4, overtime);
+            stmt.setString(5, name);
+            stmt.setString(6, originalId);
             int rows = stmt.executeUpdate();
             if (rows > 0) {
                 JOptionPane.showMessageDialog(this, "PayGroup updated successfully.");

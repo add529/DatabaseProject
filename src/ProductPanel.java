@@ -399,14 +399,14 @@ public class ProductPanel extends JPanel {
 
     private void updateProduct(String originalId, String deptId, String name, String desc, String status, String version) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "UPDATE PRODUCT SET Product_ID=?, Department_ID=?, Name=?, Description=?, Status=?, Version=? WHERE Product_ID=?";
+            String sql = "UPDATE PRODUCT SET Department_ID=?, Name=?, Description=?, Status=?, Version=? WHERE Product_ID=?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(2, deptId);
-            stmt.setString(3, name);
-            stmt.setString(4, desc);
-            stmt.setString(5, status);
-            stmt.setString(6, version);
-            stmt.setString(7, originalId);
+            stmt.setString(1, deptId);
+            stmt.setString(2, name);
+            stmt.setString(3, desc);
+            stmt.setString(4, status);
+            stmt.setString(5, version);
+            stmt.setString(6, originalId);
             int rows = stmt.executeUpdate();
             if (rows > 0) {
                 JOptionPane.showMessageDialog(this, "Product updated successfully.");

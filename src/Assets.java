@@ -469,14 +469,14 @@ public class Assets extends JPanel {
 
     private void updateAsset(String originalId, String serial_no, String type, String brand, String purchase, String warranty) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "UPDATE ASSET SET Asset_ID=?, Serial_No=?, Type=?, brand_model=?, Purchase_Date=?, Warrant_Exp_Date=? WHERE Asset_ID=?";
+            String sql = "UPDATE ASSET SET Serial_No=?, Type=?, brand_model=?, Purchase_Date=?, Warrant_Exp_Date=? WHERE Asset_ID=?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(2, serial_no);
-            stmt.setString(3, type);
-            stmt.setString(4, brand);
-            stmt.setString(5, purchase);
-            stmt.setString(6, warranty);
-            stmt.setString(7, originalId);
+            stmt.setString(1, serial_no);
+            stmt.setString(2, type);
+            stmt.setString(3, brand);
+            stmt.setString(4, purchase);
+            stmt.setString(5, warranty);
+            stmt.setString(6, originalId);
             int rows = stmt.executeUpdate();
             if (rows > 0) {
                 JOptionPane.showMessageDialog(this, "Asset updated successfully.");

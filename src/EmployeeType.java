@@ -524,12 +524,12 @@ public class EmployeeType extends JPanel {
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "UPDATE EMPLOYEE_TYPE SET Name=?, Work_Hours=?, Benefit_Eligibility=?, Overtime_Eligibility=?, Contract_Duration=? WHERE Employee_Type_ID=?";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(2, name);
-            stmt.setString(3, hours);
-            stmt.setString(4, benefit);
-            stmt.setString(5, overtime);
-            stmt.setString(6, contract);
-            stmt.setString(7, originalId);
+            stmt.setString(1, name);
+            stmt.setString(2, hours);
+            stmt.setString(3, benefit);
+            stmt.setString(4, overtime);
+            stmt.setString(5, contract);
+            stmt.setString(6, originalId);
             int rows = stmt.executeUpdate();
             if (rows > 0) {
                 JOptionPane.showMessageDialog(this, "Employee Type updated successfully.");

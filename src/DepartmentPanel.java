@@ -449,14 +449,14 @@ public class DepartmentPanel extends JPanel {
 
             private void updateDepartment(String originalId, String name, String budget, String empCount, String headSSN, String headBonus) {
                 try (Connection conn = DatabaseConnection.getConnection()) {
-                    String sql = "UPDATE DEPARTMENT SET Department_ID=?, Department_ID=?, Name=?, Description=?, Status=?, Version=? WHERE Department_ID=?";
+                    String sql = "UPDATE DEPARTMENT SET Name=?, Budget=?, Employee_Count=?, Dep_Head_SSN=?, Dep_Head_Bonus=? WHERE Department_ID=?";
                     PreparedStatement stmt = conn.prepareStatement(sql);
-                    stmt.setString(2, name);
-                    stmt.setString(3, budget);
-                    stmt.setString(4, empCount);
-                    stmt.setString(5, headSSN);
-                    stmt.setString(6, headBonus);
-                    stmt.setString(7, originalId);
+                    stmt.setString(1, name);
+                    stmt.setString(2, budget);
+                    stmt.setString(3, empCount);
+                    stmt.setString(4, headSSN);
+                    stmt.setString(5, headBonus);
+                    stmt.setString(6, originalId);
                     int rows = stmt.executeUpdate();
                     if (rows > 0) {
                         JOptionPane.showMessageDialog(this, "Department updated successfully.");
