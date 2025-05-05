@@ -129,7 +129,7 @@ public class PayPanel extends JPanel {
         buttonPanel.add(addBtn);
          // Add panels to the input panel
          inputPanel.add(buttonPanel, BorderLayout.NORTH); // Buttons at the top
-       
+
         // Add the input panel to the bottom of the table wrapper
         tableWrapper.add(inputPanel, BorderLayout.SOUTH);
 
@@ -138,7 +138,7 @@ public class PayPanel extends JPanel {
 
         // === ACTION LISTENERS - These say what happens when button is pressed ===
 
-        selectBtn.addActionListener(e -> openEditDialog());        
+        selectBtn.addActionListener(e -> openEditDialog());
         searchBtn.addActionListener(e -> searchPayGroup());
         showEmpPay.addActionListener(e -> showEmpPay());
         showPayET.addActionListener(e -> showPayET());
@@ -201,35 +201,75 @@ public class PayPanel extends JPanel {
     // === CALLED WHEN SEARCH BUTTON PRESSED, CONTROLS SEARCH PROCESS ===
 
     private void searchPayGroup() {
-        String payGroupNo = searchField.getText().trim();
-        if (payGroupNo.isEmpty()) { //If nothing in search, error message shows
-            showError("Please enter an Pay Group ID to search.");
+        String payGroupId = searchField.getText().trim();
+        if (payGroupId.isEmpty()) { // If nothing in search, show error message
+            showError("Please enter a Pay Group ID to search.");
             return;
         }
 
-        tableModel.setRowCount(0);
-        try (Connection conn = DatabaseConnection.getConnection()) { //SQL code and connection for finding row from ID
-            String sql = "SELECT PayGroup_ID, Pay_Rate, Pay_Frequency, Pay_Period, Overtime_Rate, Name FROM PAY_GROUP WHERE PayGroup_ID = ?";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, payGroupNo);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                tableModel.addRow(new Object[]{
-                    rs.getString("PayGroup_ID"),
-                    rs.getString("Pay_Rate"),
-                    rs.getString("Pay_Frequency"),
-                    rs.getString("Pay_Period"),
-                    rs.getString("Overtime_Rate"),
-                    rs.getString("Name")
-                });
-            } else {
-                showError("No Pay Group found with Pay Group ID: " + payGroupNo);
+        // Check if the "Employees" button was clicked
+        if (tableModel.getColumnCount() == 5 && tableModel.getColumnName(2).equals("Employee No")) {
+            // Fetch employees for the specified pay group ID
+            tableModel.setRowCount(0); // Clear the table before adding new data
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                String sql = """
+                    SELECT
+                        p.PayGroup_ID,
+                        p.Pay_Rate,
+                        e.Employee_No,
+                        e.FName,
+                        e.LName
+                    FROM
+                        PAY_GROUP p
+                    JOIN
+                        EMPLOYEE e ON p.PayGroup_ID = e.Pay_Group
+                    WHERE
+                        p.PayGroup_ID = ?
+                """;
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.setString(1, payGroupId);
+                ResultSet rs = stmt.executeQuery();
+
+                while (rs.next()) {
+                    tableModel.addRow(new Object[]{
+                        rs.getString("PayGroup_ID"),
+                        rs.getString("Pay_Rate"),
+                        rs.getString("Employee_No"),
+                        rs.getString("FName"),
+                        rs.getString("LName")
+                    });
+                }
+            } catch (Exception ex) {
+                showError("Error fetching employees for the specified pay group: " + ex.getMessage());
             }
-        } catch (Exception ex) {
-            showError("Error searching for payGroup: " + ex.getMessage());
+        } else {
+            // Fetch pay group details for the specified pay group ID
+            tableModel.setColumnIdentifiers(new String[]{"PayGroup ID", "Pay Rate", "Pay Frequency", "Pay Period", "Overtime Rate", "Name"});
+            tableModel.setRowCount(0); // Clear the table before adding new data
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                String sql = "SELECT PayGroup_ID, Pay_Rate, Pay_Frequency, Pay_Period, Overtime_Rate, Name FROM PAY_GROUP WHERE PayGroup_ID = ?";
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.setString(1, payGroupId);
+                ResultSet rs = stmt.executeQuery();
+
+                if (rs.next()) {
+                    tableModel.addRow(new Object[]{
+                        rs.getString("PayGroup_ID"),
+                        rs.getString("Pay_Rate"),
+                        rs.getString("Pay_Frequency"),
+                        rs.getString("Pay_Period"),
+                        rs.getString("Overtime_Rate"),
+                        rs.getString("Name")
+                    });
+                } else {
+                    showError("No Pay Group found with Pay Group ID: " + payGroupId);
+                }
+            } catch (Exception ex) {
+                showError("Error searching for pay group: " + ex.getMessage());
+            }
         }
 
-        padTableRows(35); // This keeps the empty rows there for design purposes
+        padTableRows(35); // Keep empty rows for design purposes
     }
 
     // === CALLED WHEN SHOW ALL PRESSED, SHOWS PAY GROUP DETAILS ===
@@ -265,15 +305,15 @@ public class PayPanel extends JPanel {
             tableModel.setRowCount(0);
             try (Connection conn = DatabaseConnection.getConnection()) {
                 String sql = """
-                    SELECT 
-                        p.PayGroup_ID, 
-                        p.Pay_Rate, 
-                        e.Employee_No, 
-                        e.FName, 
+                    SELECT
+                        p.PayGroup_ID,
+                        p.Pay_Rate,
+                        e.Employee_No,
+                        e.FName,
                         e.LName
-                    FROM 
+                    FROM
                         PAY_GROUP p
-                    JOIN 
+                    JOIN
                         EMPLOYEE e ON p.PayGroup_ID = e.Pay_Group
                 """;
                 PreparedStatement stmt = conn.prepareStatement(sql);
@@ -293,21 +333,21 @@ public class PayPanel extends JPanel {
             padTableRows(35);
             selectBtn.setEnabled(false); // Disable Select button
         }
-    
+
 
         private void showPayET() {
             tableModel.setColumnIdentifiers(new String[]{"Pay Group ID", "Pay Group Name", "Employee Type ID", "Employee Type Name"});
             tableModel.setRowCount(0);
             try (Connection conn = DatabaseConnection.getConnection()) {
                 String sql = """
-                            SELECT 
-                                p.PayGroup_ID, 
-                                p.Name AS "pgName", 
-                                e.Employee_Type_ID, 
+                            SELECT
+                                p.PayGroup_ID,
+                                p.Name AS "pgName",
+                                e.Employee_Type_ID,
                                 e.Name AS "etName"
-                            FROM 
+                            FROM
                                 PAY_GROUP p
-                            JOIN 
+                            JOIN
                                 EMPLOYEE_TYPE e ON p.PayGroup_ID = e.PayGroup_ID
                         """;
                 PreparedStatement stmt = conn.prepareStatement(sql);
@@ -326,7 +366,7 @@ public class PayPanel extends JPanel {
             padTableRows(35);
             selectBtn.setEnabled(false); // Disable Select button
         }
-    
+
 
 
     // === CALLED WHEN ADD BUTTON PRESSED, CONTROLS MODAL ===
@@ -360,7 +400,7 @@ public class PayPanel extends JPanel {
                 String maxIdQuery = "SELECT MAX(CAST(SUBSTRING(PayGroup_ID, 4) AS UNSIGNED)) AS MaxID FROM PAY_GROUP";
                 ResultSet maxIdResult = conn.createStatement().executeQuery(maxIdQuery);
                 String pgID = "PG-";
-                
+
                 if (maxIdResult.next()) {
                     int maxId = maxIdResult.getInt("MaxID");
                     pgID += String.format("%03d", maxId + 1);  // Increment the maximum ID and format
@@ -404,7 +444,7 @@ public class PayPanel extends JPanel {
             showError("Please select a row to edit.");
             return;
         }
-    
+
         // Get visible values from table
         String pgID = (String) tableModel.getValueAt(selectedRow, 0);
         String payRate = (String) tableModel.getValueAt(selectedRow, 1);
@@ -412,8 +452,8 @@ public class PayPanel extends JPanel {
         String payPer = (String) tableModel.getValueAt(selectedRow, 3);
         String overtime = (String) tableModel.getValueAt(selectedRow, 4);
         String name = (String) tableModel.getValueAt(selectedRow, 5);
-    
-    
+
+
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "SELECT * FROM PAY_GROUP WHERE PayGroup_ID = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
@@ -423,9 +463,9 @@ public class PayPanel extends JPanel {
                 showError("Could not retrieve full record.");
                 return;
             }
-    
+
             String fullPGID = rs.getString("PayGroup_ID");
-    
+
             // === Build Modal Dialog ===
             JLabel idField = new JLabel(fullPGID);
             JTextField rateField = new JTextField(payRate);
@@ -433,7 +473,7 @@ public class PayPanel extends JPanel {
             JTextField periodField = new JTextField(payPer);
             JTextField overtimeField = new JTextField(overtime);
             JTextField nameField = new JTextField(name);
-    
+
             JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
             panel.add(new JLabel("Pay Group ID:")); panel.add(idField);
             panel.add(new JLabel("Pay Rate:")); panel.add(rateField);
@@ -441,12 +481,12 @@ public class PayPanel extends JPanel {
             panel.add(new JLabel("Pay Period:")); panel.add(periodField);
             panel.add(new JLabel("Overtime Rate:")); panel.add(overtimeField);
             panel.add(new JLabel("Name:")); panel.add(nameField);
-    
+
             Object[] options = {"Update", "Delete", "Cancel"};
             int result = JOptionPane.showOptionDialog(this, panel, "Edit PayGroup",
                     JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
                     null, options, options[0]);
-    
+
             if (result == JOptionPane.YES_OPTION) {
                 // Update
                 updatePayGroup(
@@ -462,7 +502,7 @@ public class PayPanel extends JPanel {
                 // Delete
                 deletePayGroup(fullPGID);
             }
-    
+
         } catch (Exception ex) {
             showError("Error retrieving paygroup: " + ex.getMessage());
         }
@@ -491,14 +531,14 @@ public class PayPanel extends JPanel {
             showError("Error updating paygroup: " + ex.getMessage());
         }
     }
-    
+
 
     // === CALLED WHEN DELETE BUTTON PRESSED IN MODAL ===
 
     private void deletePayGroup(String pgID) {
         int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this paygroup?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
-    
+
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "DELETE FROM PAY_GROUP WHERE PayGroup_ID=?";
             PreparedStatement stmt = conn.prepareStatement(sql);

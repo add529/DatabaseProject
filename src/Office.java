@@ -126,7 +126,7 @@ public class Office extends JPanel {
         buttonPanel.add(addBtn);
          // Add panels to the input panel
          inputPanel.add(buttonPanel, BorderLayout.NORTH); // Buttons at the top
-       
+
         // Add the input panel to the bottom of the table wrapper
         tableWrapper.add(inputPanel, BorderLayout.SOUTH);
 
@@ -135,7 +135,7 @@ public class Office extends JPanel {
 
         // === ACTION LISTENERS - These say what happens when button is pressed ===
 
-        selectBtn.addActionListener(e -> openEditDialog());        
+        selectBtn.addActionListener(e -> openEditDialog());
         searchBtn.addActionListener(e -> searchOffice());
         showEmp.addActionListener(e -> showEmp());
         showAllBtn.addActionListener(e -> loadAllOffices());
@@ -198,31 +198,71 @@ public class Office extends JPanel {
 
     private void searchOffice() {
         String officeNo = searchField.getText().trim();
-        if (officeNo.isEmpty()) { //If nothing in search, error message shows
+        if (officeNo.isEmpty()) { // If nothing in search, show error message
             showError("Please enter an Office ID to search.");
             return;
         }
 
-        tableModel.setRowCount(0);
-        try (Connection conn = DatabaseConnection.getConnection()) { //SQL code and connection for finding row from ID
-            String sql = "SELECT Office_ID, Name, Location WHERE Office_ID = ?";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, officeNo);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                tableModel.addRow(new Object[]{
-                    rs.getString("Office_ID"),
-                    rs.getString("Name"),
-                    rs.getString("Location")
-                });
-            } else {
-                showError("No Office found with Office ID: " + officeNo);
+        // Check if the "Employees" button was clicked
+        if (tableModel.getColumnCount() == 5 && tableModel.getColumnName(2).equals("Employee No")) {
+            // Fetch employees for the specified office ID
+            tableModel.setRowCount(0); // Clear the table before adding new data
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                String sql = """
+                    SELECT
+                        o.Office_ID,
+                        o.Name,
+                        e.Employee_No,
+                        e.FName,
+                        e.LName
+                    FROM
+                        OFFICE o
+                    JOIN
+                        EMPLOYEE e ON o.Office_ID = e.Office_ID
+                    WHERE
+                        o.Office_ID = ?
+                """;
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.setString(1, officeNo);
+                ResultSet rs = stmt.executeQuery();
+
+                while (rs.next()) {
+                    tableModel.addRow(new Object[]{
+                        rs.getString("Office_ID"),
+                        rs.getString("Name"),
+                        rs.getString("Employee_No"),
+                        rs.getString("FName"),
+                        rs.getString("LName")
+                    });
+                }
+            } catch (Exception ex) {
+                showError("Error fetching employees for the specified office: " + ex.getMessage());
             }
-        } catch (Exception ex) {
-            showError("Error searching for office: " + ex.getMessage());
+        } else {
+            // Fetch office details for the specified office ID
+            tableModel.setColumnIdentifiers(new String[]{"Office ID", "Name", "Location"});
+            tableModel.setRowCount(0); // Clear the table before adding new data
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                String sql = "SELECT Office_ID, Name, Location FROM OFFICE WHERE Office_ID = ?";
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.setString(1, officeNo);
+                ResultSet rs = stmt.executeQuery();
+
+                if (rs.next()) {
+                    tableModel.addRow(new Object[]{
+                        rs.getString("Office_ID"),
+                        rs.getString("Name"),
+                        rs.getString("Location")
+                    });
+                } else {
+                    showError("No Office found with Office ID: " + officeNo);
+                }
+            } catch (Exception ex) {
+                showError("Error searching for office: " + ex.getMessage());
+            }
         }
 
-        padTableRows(35); // This keeps the empty rows there for design purposes
+        padTableRows(35); // Keep empty rows for design purposes
     }
 
     // === CALLED WHEN SHOW ALL PRESSED, SHOWS PAY GROUP DETAILS ===
@@ -255,15 +295,15 @@ public class Office extends JPanel {
             tableModel.setRowCount(0);
             try (Connection conn = DatabaseConnection.getConnection()) {
                 String sql = """
-                    SELECT 
+                    SELECT
                         o.Office_ID,
                         o.Name,
-                        e.Employee_No, 
-                        e.FName, 
+                        e.Employee_No,
+                        e.FName,
                         e.LName
-                    FROM 
+                    FROM
                         OFFICE o
-                    JOIN 
+                    JOIN
                         EMPLOYEE e ON o.Office_ID = e.Office_ID
                 """;
                 PreparedStatement stmt = conn.prepareStatement(sql);
@@ -283,7 +323,7 @@ public class Office extends JPanel {
             padTableRows(35);
             selectBtn.setEnabled(false); // Disable Select button
         }
-    
+
 
     // === CALLED WHEN ADD BUTTON PRESSED, CONTROLS MODAL ===
 
@@ -316,7 +356,7 @@ public class Office extends JPanel {
                 String maxIdQuery = "SELECT MAX(CAST(SUBSTRING(Office_ID, 4) AS UNSIGNED)) AS MaxID FROM OFFICE";
                 ResultSet maxIdResult = conn.createStatement().executeQuery(maxIdQuery);
                 String oID = "O-";
-                
+
                 if (maxIdResult.next()) {
                     int maxId = maxIdResult.getInt("MaxID");
                     oID += String.format("%03d", maxId + 1);  // Increment the maximum ID and format
@@ -359,13 +399,13 @@ public class Office extends JPanel {
             showError("Please select a row to edit.");
             return;
         }
-    
+
         // Get visible values from table
         String oID = (String) tableModel.getValueAt(selectedRow, 0);
         String name = (String) tableModel.getValueAt(selectedRow, 1);
         String location = (String) tableModel.getValueAt(selectedRow, 2);
-    
-    
+
+
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "SELECT * FROM OFFICE WHERE Office_ID = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
@@ -375,22 +415,22 @@ public class Office extends JPanel {
                 showError("Could not retrieve full record.");
                 return;
             }
-    
+
             // === Build Modal Dialog ===
             JLabel idField = new JLabel(oID);
             JTextField nameField = new JTextField(name);
             JTextField locField = new JTextField(location);
-    
+
             JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
             panel.add(new JLabel("Office ID:")); panel.add(idField);
             panel.add(new JLabel("Office Name:")); panel.add(nameField);
             panel.add(new JLabel("Office Location:")); panel.add(locField);
-    
+
             Object[] options = {"Update", "Delete", "Cancel"};
             int result = JOptionPane.showOptionDialog(this, panel, "Edit Office",
                     JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE,
                     null, options, options[0]);
-    
+
             if (result == JOptionPane.YES_OPTION) {
                 // Update
                 updateOffice(
@@ -403,7 +443,7 @@ public class Office extends JPanel {
                 // Delete
                 deleteOffice(oID);
             }
-    
+
         } catch (Exception ex) {
             showError("Error retrieving office: " + ex.getMessage());
         }
@@ -429,14 +469,14 @@ public class Office extends JPanel {
             showError("Error updating office: " + ex.getMessage());
         }
     }
-    
+
 
     // === CALLED WHEN DELETE BUTTON PRESSED IN MODAL ===
 
     private void deleteOffice(String oID) {
         int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this office?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
-    
+
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "DELETE FROM OFFICE WHERE Office_ID=?";
             PreparedStatement stmt = conn.prepareStatement(sql);
