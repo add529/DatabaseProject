@@ -1,14 +1,5 @@
 # **DATABASE PROJECT**
 
-## Tasks
-- Write manual
-- Write tutorial
-- Make Flyer
-- Make Presentation
-
-## Tasks for Software
-- DONE!!!
-
 ---
 
 ## How to Make Changes
