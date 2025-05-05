@@ -2,6 +2,18 @@
 
 ---
 
+## Important Notes
+
+The username and password to logging into the management software are username:**USER** and password:**password**
+
+All project documentation is located in the Documents folder of this repository.
+**The contents of Documents**:
+- Manuals
+- Presentation slides
+- Database flyer
+- SQL statements
+- Report 1
+
 ## How to Make Changes
 
 1. **Clone the repository** (only needed once):
@@ -68,7 +80,5 @@ There are two methods to run the project. It is our recommendation that this pro
     java MainApp
     ```
 
-## Important Notes
 
-The username and password to logging into the management software are username:**USER** and password:**password**
 
